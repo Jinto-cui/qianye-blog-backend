@@ -1,0 +1,31 @@
+server:
+  port: 7777
+spring:
+  profiles:
+    active: test
+  servlet:
+    multipart:
+      max-file-size: 2MB
+      max-request-size: 5MB
+  # swagger 配置
+  mvc:
+    pathmatch:
+      matching-strategy: ant_path_matcher
+  main: #解决循环依赖
+    allow-circular-references: true
+
+mybatis-plus:
+  configuration:
+    # 日志
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+  global-config:    # 逻辑删除
+    db-config:
+      logic-delete-field: deFlag
+      logic-delete-value: 1
+      logic-not-delete-value: 0
+      id-type: auto # 主键自增
+
+oss:
+  accessKey: xxx
+  secretKey: xxx
+  bucket: qianye-blog
