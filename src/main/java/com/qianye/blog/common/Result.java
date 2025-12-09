@@ -1,30 +1,33 @@
 package com.qianye.blog.common;
 
-import com.qianye.blog.constant.ErrorCode;
+import com.qianye.blog.common.constant.ErrorCode;
+import lombok.Getter;
 
 import java.io.Serializable;
 
 /**
- * @Author 浅夜
- * @Description 统一返回结果
- * @DateTime 2023/12/21 22:25
- **/
+ * @author: Jinto Cui
+ * @desc: 通用返回对象
+ * @date: 2025/12/9 23:00
+ * @version: v1.0
+ */
+@Getter
 public class Result<T> implements Serializable {
 
     /**
-     * 状态码
+     * 响应状态码
      */
-    private int code;
+    private final int code;
 
     /**
-     * 消息
+     * 响应消息
      */
-    private String message;
+    private final String message;
 
     /**
-     * 数据
+     * 数据对象
      */
-    private T data;
+    private final T data;
 
     /**
      * 描述
@@ -50,19 +53,4 @@ public class Result<T> implements Serializable {
         this(errorCode.getCode(), errorCode.getMessage(), errorCode.getDescription(), null);
     }
 
-    public int getCode() {
-        return code;
-    }
-
-    public String getMessage() {
-        return message;
-    }
-
-    public T getData() {
-        return data;
-    }
-
-    public String getDescription() {
-        return description;
-    }
 }

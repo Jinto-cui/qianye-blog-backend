@@ -1,7 +1,8 @@
 package com.qianye.blog.utils;
 
 import com.qianye.blog.common.Result;
-import com.qianye.blog.constant.ErrorCode;
+import com.qianye.blog.common.constant.ErrorCode;
+import com.qianye.blog.common.exception.GlobalException;
 
 /**
  * @Author 浅夜
@@ -62,4 +63,12 @@ public class ResultUtils {
         return new Result<>(errorCode.getCode(), errorCode.getMessage(), description);
     }
 
+    /**
+     * 通用异常返回
+     * @param exception 全局异常对象
+     * @return Result失败对象
+     */
+    public static Result<?> error(GlobalException exception) {
+        return new Result<>(exception.getCode(), exception.getMessage(), exception.getDescription());
+    }
 }
