@@ -5,6 +5,7 @@ import com.qianye.blog.common.constant.ErrorCode;
 import com.qianye.blog.utils.ResultUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 /**
@@ -16,15 +17,17 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 @Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+    @ResponseBody
     @ExceptionHandler(GlobalException.class) //指定方法要捕获的异常
     public Result<?> globalExceptionHandler(GlobalException exception) {
         log.error("系统抛出自定义异常！" + exception.getMessage (), exception);
         return ResultUtils.error(exception);
     }
 
-    @ExceptionHandler(RuntimeException.class)
-    public Result<?> runtimeExceptionHandler(RuntimeException e) {
-        log.error("runtimeException", e);
+    @ResponseBody
+    @ExceptionHandler(Exception.class)
+    public Result<?> runtimeExceptionHandler(Exception e) {
+        log.error("未知异常:", e);
         return ResultUtils.error(ErrorCode.SYSTEM_ERROR, e.getMessage(), "");
     }
 }
