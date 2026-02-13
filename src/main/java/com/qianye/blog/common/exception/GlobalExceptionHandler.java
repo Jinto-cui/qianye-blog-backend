@@ -28,6 +28,6 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(Exception.class)
     public Result<?> runtimeExceptionHandler(Exception e) {
         log.error("未知异常:", e);
-        return ResultUtils.error(ErrorCode.SYSTEM_ERROR, e.getMessage(), "");
+        return ResultUtils.error(ErrorCode.SYSTEM_ERROR, "");
     }
 }

@@ -58,8 +58,6 @@ public class ResultUtils {
      * @return
      */
     public static Result<?> error(ErrorCode errorCode, String description) {
-        System.out.println(errorCode.getCode());
-        System.out.println(errorCode.getMessage());
         return new Result<>(errorCode.getCode(), errorCode.getMessage(), description);
     }
 
