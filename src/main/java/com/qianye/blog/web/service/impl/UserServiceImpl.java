@@ -1,5 +1,6 @@
 package com.qianye.blog.web.service.impl;
 
+import cn.dev33.satoken.stp.StpUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.qianye.blog.common.constant.ErrorCode;
@@ -10,18 +11,14 @@ import com.qianye.blog.web.mapper.UserMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.util.DigestUtils;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.Date;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-/**
- * @author 浅夜光芒万丈
- * @description 针对表【user(用户表)】的数据库操作Service实现
- * @createDate 2023-10-30 22:41:32
- */
 @Service
 @Slf4j
 public class UserServiceImpl extends ServiceImpl<UserMapper, User>
@@ -30,29 +27,12 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
     @Autowired
     UserMapper userMapper;
 
-    /**
-     * 盐值 ，用于混淆密码
-     */
-    private static final String SALT = "line";
+    private static final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
-    /**
-     * 用户登录状态键
-     */
-    private static final String USER_LOGIN_STATUS = "userLoginStatus";
-
-
-    /**
-     * 用户注册
-     *
-     * @param userAccount   用户账户
-     * @param userPassword  用户密码
-     * @param checkPassword 校验密码
-     * @param code
-     * @return 新用户id
-     */
-    public long userRegister(String userAccount, String userPassword, String checkPassword, String code) {
-        //1. 校验(采用apache commons lang依赖中的方法来一次判断多个变量是否为空)
-        if (StringUtils.isAllBlank(userAccount, userPassword, checkPassword, code)) {
+    @Override
+    public long userRegister(String userAccount, String userPassword, String checkPassword,
+                             String nickname, String email) {
+        if (StringUtils.isAllBlank(userAccount, userPassword, checkPassword)) {
             throw new GlobalException(ErrorCode.PARAMS_ERROR, "参数不能为空");
         }
         if (userAccount.length() < 4) {
@@ -61,64 +41,42 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         if (userPassword.length() < 8 || checkPassword.length() < 8) {
             throw new GlobalException(ErrorCode.PARAMS_ERROR, "密码长度不小于8位");
         }
-        if(code.length() > 5) {
-            throw new GlobalException(ErrorCode.PARAMS_ERROR, "用户编号不能超过5位");
-        }
 
-        //账户不能包含特殊字符
         String regEx = "\\pP|\\pS|\\s+";
         Matcher matcher = Pattern.compile(regEx).matcher(userAccount);
         if (matcher.find()) {
-            throw new GlobalException(ErrorCode.PARAMS_ERROR, "用户名不能包含特殊字符");
+            throw new GlobalException(ErrorCode.PARAMS_ERROR, "账户名不能包含特殊字符");
         }
 
-        //保持两次密码相同
         if (!userPassword.equals(checkPassword)) {
-            throw new GlobalException(ErrorCode.PARAMS_ERROR);
+            throw new GlobalException(ErrorCode.PARAMS_ERROR, "两次密码不一致");
         }
 
-        //账户不能重复（写在校验特殊字符逻辑之后，减小性能开销）
-        QueryWrapper<User> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("userAccount", userAccount);
-        long count = userMapper.selectCount(queryWrapper);
-        if (count > 0) {
+        QueryWrapper<User> qw = new QueryWrapper<>();
+        qw.eq("user_account", userAccount);
+        if (userMapper.selectCount(qw) > 0) {
             throw new GlobalException(ErrorCode.PARAMS_ERROR, "用户已存在");
         }
 
-        //用户编号不能重复
-        QueryWrapper<User> queryWrapper1 = new QueryWrapper<>();
-        queryWrapper1.eq("code", code);
-        count = userMapper.selectCount(queryWrapper1);
-        if(count >0) {
-            throw new GlobalException(ErrorCode.PARAMS_ERROR, "编号不能重复");
+        if (StringUtils.isNotBlank(email)) {
+            QueryWrapper<User> emailQw = new QueryWrapper<>();
+            emailQw.eq("email", email);
+            if (userMapper.selectCount(emailQw) > 0) {
+                throw new GlobalException(ErrorCode.PARAMS_ERROR, "邮箱已被注册");
+            }
         }
 
-        //2. 加密
-        String encryptPassword = DigestUtils.md5DigestAsHex((SALT + userPassword).getBytes());
-
-        //3.插入数据
         User user = new User();
         user.setUserAccount(userAccount);
-        user.setUserPassword(encryptPassword);
-        user.setCode(code);
-        boolean isSave = this.save(user);
-
-        if (!isSave) {
-            throw new GlobalException(ErrorCode.PARAMS_ERROR, "用户已存在");
-        }
+        user.setUserPassword(passwordEncoder.encode(userPassword));
+        user.setNickname(StringUtils.isNotBlank(nickname) ? nickname : userAccount);
+        user.setEmail(email);
+        this.save(user);
         return user.getId();
     }
 
-    /**
-     * 用户登录
-     *
-     * @param userAccount  账户名
-     * @param userPassword 账户密码
-     * @return 返回脱敏后的用户信息
-     */
     @Override
     public User doLogin(String userAccount, String userPassword, HttpServletRequest request) {
-        //1. 校验(采用apache commons lang依赖中的方法来一次判断多个变量是否为空)
         if (StringUtils.isAllBlank(userAccount, userPassword)) {
             throw new GlobalException(ErrorCode.PARAMS_ERROR, "参数不能为空");
         }
@@ -129,73 +87,42 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
             throw new GlobalException(ErrorCode.PARAMS_ERROR, "密码长度不小于8位");
         }
 
-        //账户不能包含特殊字符
         String regEx = "\\pP|\\pS|\\s+";
         Matcher matcher = Pattern.compile(regEx).matcher(userAccount);
         if (matcher.find()) {
-            throw new GlobalException(ErrorCode.PARAMS_ERROR, "用户名不能包含特殊字符");
+            throw new GlobalException(ErrorCode.PARAMS_ERROR, "账户名不能包含特殊字符");
         }
 
-        //1. 加密
-        String encryptPassword = DigestUtils.md5DigestAsHex((SALT + userPassword).getBytes());
-
-        //2.查询是否存在响应的用户
-        QueryWrapper<User> queryWrapper1 = new QueryWrapper<>();
-        queryWrapper1.eq("userAccount", userAccount);
-        queryWrapper1.eq("userPassword", encryptPassword);
-        User user = userMapper.selectOne(queryWrapper1);
-        if (user == null) { //用户不存在
-            log.info("user login failed, userAccount cannot match userPassword");
-            throw new GlobalException(ErrorCode.PARAMS_ERROR, "用户不存在");
+        QueryWrapper<User> qw = new QueryWrapper<>();
+        qw.eq("user_account", userAccount);
+        User user = userMapper.selectOne(qw);
+        if (user == null) {
+            log.info("login failed, account not found: {}", userAccount);
+            throw new GlobalException(ErrorCode.PARAMS_ERROR, "用户不存在或密码错误");
         }
 
-        //3.用户信息脱敏
-        User safetyUser = getSafetyUser(user);
+        if (!passwordEncoder.matches(userPassword, user.getUserPassword())) {
+            log.info("login failed, password mismatch: {}", userAccount);
+            throw new GlobalException(ErrorCode.PARAMS_ERROR, "用户不存在或密码错误");
+        }
 
-        //4.记录用户的用户态
-        request.getSession().setAttribute(USER_LOGIN_STATUS, safetyUser);
-        return safetyUser;
+        if (user.getStatus() != null && user.getStatus() == 1) {
+            throw new GlobalException(ErrorCode.NO_AUTH, "账号已被停用");
+        }
+
+        StpUtil.login(user.getId());
+
+        // 更新最后登录信息
+        user.setLastLoginAt(new Date());
+        user.setLastLoginIp(request.getRemoteAddr());
+        userMapper.updateById(user);
+
+        return user;
     }
 
-    /**
-     * 用户脱敏
-     *
-     * @param user
-     * @return
-     */
-    @Override
-    public User getSafetyUser(User user) {
-        if(user == null) {
-            return null;
-        }
-        User safetyUser = new User();
-        safetyUser.setId(user.getId());
-        safetyUser.setUsername(user.getUsername());
-        safetyUser.setUserAccount(user.getUserAccount());
-        safetyUser.setAvatarUrl(user.getAvatarUrl());
-        safetyUser.setGender(user.getGender());
-        safetyUser.setPhone(user.getPhone());
-        safetyUser.setUserRole(user.getUserRole());
-        safetyUser.setCreateTime(user.getCreateTime());
-        safetyUser.setUserStatus(user.getUserStatus());
-        safetyUser.setEmail(user.getEmail());
-        safetyUser.setCode(user.getCode());
-
-        return safetyUser;
-    }
-
-    /**
-     * 用户注销
-     *
-     * @return 1表示注销成功
-     */
     @Override
     public Integer userLogout(HttpServletRequest request) {
-        request.getSession().removeAttribute(USER_LOGIN_STATUS);
+        StpUtil.logout();
         return 1;
     }
 }
-
-
-
-

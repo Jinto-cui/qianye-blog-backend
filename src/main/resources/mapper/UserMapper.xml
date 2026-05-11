@@ -5,27 +5,26 @@
 <mapper namespace="com.qianye.blog.web.mapper.UserMapper">
 
     <resultMap id="BaseResultMap" type="com.qianye.blog.web.model.User">
-            <id property="id" column="id" jdbcType="BIGINT"/>
-            <result property="username" column="username" jdbcType="VARCHAR"/>
-            <result property="userAccount" column="userAccount" jdbcType="VARCHAR"/>
-            <result property="avatarUrl" column="avatarUrl" jdbcType="VARCHAR"/>
-            <result property="gender" column="gender" jdbcType="TINYINT"/>
-            <result property="userPassword" column="userPassword" jdbcType="VARCHAR"/>
-            <result property="phone" column="phone" jdbcType="VARCHAR"/>
-            <result property="createTime" column="createTime" jdbcType="TIMESTAMP"/>
-            <result property="updateTime" column="updateTime" jdbcType="TIMESTAMP"/>
-            <result property="userStatus" column="userStatus" jdbcType="INTEGER"/>
-            <result property="isDelete" column="isDelete" jdbcType="TINYINT"/>
-            <result property="email" column="email" jdbcType="VARCHAR"/>
-            <result property="userRole" column="userRole" jdbcType="INTEGER"/>
-            <result property="code" column="code" jdbcType="VARCHAR"/>
-
+        <id property="id" column="id" jdbcType="BIGINT"/>
+        <result property="userAccount" column="user_account" jdbcType="VARCHAR"/>
+        <result property="userPassword" column="user_password" jdbcType="VARCHAR"/>
+        <result property="nickname" column="nickname" jdbcType="VARCHAR"/>
+        <result property="email" column="email" jdbcType="VARCHAR"/>
+        <result property="avatarUrl" column="avatar_url" jdbcType="VARCHAR"/>
+        <result property="bio" column="bio" jdbcType="VARCHAR"/>
+        <result property="socialLinks" column="social_links" jdbcType="VARCHAR"/>
+        <result property="role" column="role" jdbcType="TINYINT"/>
+        <result property="status" column="status" jdbcType="TINYINT"/>
+        <result property="lastLoginAt" column="last_login_at" jdbcType="TIMESTAMP"/>
+        <result property="lastLoginIp" column="last_login_ip" jdbcType="VARCHAR"/>
+        <result property="createdAt" column="created_at" jdbcType="TIMESTAMP"/>
+        <result property="updatedAt" column="updated_at" jdbcType="TIMESTAMP"/>
+        <result property="deleted" column="deleted" jdbcType="TINYINT"/>
     </resultMap>
 
     <sql id="Base_Column_List">
-        id,username,userAccount,
-        avatarUrl,gender,userPassword,
-        phone,createTime,updateTime,
-        userStatus,isDelete,email,userRole
+        id, user_account, user_password, nickname, email, avatar_url,
+        bio, social_links, role, status, last_login_at, last_login_ip,
+        created_at, updated_at, deleted
     </sql>
 </mapper>

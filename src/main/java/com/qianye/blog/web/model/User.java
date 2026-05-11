@@ -1,90 +1,61 @@
 package com.qianye.blog.web.model;
 
 import com.baomidou.mybatisplus.annotation.*;
+import lombok.Data;
 
 import java.io.Serializable;
 import java.util.Date;
-import lombok.Data;
 
-/**
- * 用户表
- * @TableName user
- */
-@TableName(value ="user")
+@TableName(value = "user")
 @Data
 public class User implements Serializable {
-    /**
-     * 
-     */
+
     @TableId
     private Long id;
 
-    /**
-     * 用户昵称
-     */
-    private String username;
-
-    /**
-     * 账号
-     */
+    /** 登录账号 */
     private String userAccount;
 
-    /**
-     * 用户头像
-     */
-    private String avatarUrl;
-
-    /**
-     * 用户性别
-     */
-    private Integer gender;
-
-    /**
-     * 用户密码
-     */
+    /** 密码（BCrypt） */
     private String userPassword;
 
-    /**
-     * 电话
-     */
-    private String phone;
+    /** 昵称 / 展示名 */
+    private String nickname;
 
-    /**
-     * 创建时间
-     */
-    private Date createTime;
-
-    /**
-     * 更新时间
-     */
-    private Date updateTime;
-
-    /**
-     *  用户状态 0 - 正常 
-     */
-    private Integer userStatus;
-
-    /**
-     * 用户角色 0 - 普通  1 - 管理员
-     */
-    private Integer userRole;
-
-    /**
-     * 是否删除
-     */
-    @TableLogic //表示该字段是逻辑删除字段，对应配置文件中要有说明
-    private Integer isDelete;
-
-    /**
-     * 邮箱
-     */
+    /** 邮箱 */
     private String email;
+
+    /** 头像 URL */
+    private String avatarUrl;
+
+    /** 个人简介 */
+    private String bio;
+
+    /** 社交链接 JSON */
+    private String socialLinks;
+
+    /** 角色：0 = 普通用户，1 = 管理员 */
+    private Integer role;
+
+    /** 状态：0 = 正常，1 = 停用 */
+    private Integer status;
+
+    /** 最后登录时间 */
+    private Date lastLoginAt;
+
+    /** 最后登录 IP */
+    private String lastLoginIp;
+
+    /** 创建时间 */
+    private Date createdAt;
+
+    /** 更新时间 */
+    private Date updatedAt;
+
+    /** 逻辑删除 */
+    @TableLogic
+    private Integer deleted;
 
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;
-
-    /**
-     * 用户编号
-     */
-    private String code;
 }

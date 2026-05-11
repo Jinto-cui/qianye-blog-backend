@@ -1,5 +1,7 @@
 package com.qianye.blog.web.controller;
 
+import cn.dev33.satoken.annotation.SaCheckLogin;
+import cn.dev33.satoken.stp.StpUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.qianye.blog.common.Result;
@@ -50,11 +52,14 @@ public class PostController {
     private PostCategoryService postCategoryService;
     @Autowired
     private CategoryService categoryService;
+    @Autowired
+    private UserService userService;
 
     /**
      * 获取文章列表（limit/offset）
      */
     @GetMapping("/posts")
+    @SaCheckLogin
     public Result<List<PostDto>> listPosts(@RequestParam(required = false, defaultValue = "5") Integer limit,
                                            @RequestParam(required = false, defaultValue = "0") Integer offset) {
         int pageSize = Math.max(1, limit);
@@ -254,6 +259,7 @@ public class PostController {
     /**
      * 指定下标计数自增（0..3）
      */
+    @SaCheckLogin
     @PatchMapping("/posts/{id}/reactions")
     public Result<List<Integer>> incrReaction(@PathVariable("id") String extId,
                                               @RequestParam("index") Integer index) {
@@ -303,14 +309,11 @@ public class PostController {
     /**
      * 新增评论（需鉴权，ext_id）
      */
+    @SaCheckLogin
     @PostMapping("/posts/{id}/comments")
     public Result<Comment> addComment(@PathVariable("id") String extId,
                                       @RequestBody CreateCommentRequest req,
                                       HttpServletRequest request) {
-        Object userObj = request.getSession().getAttribute("userLoginStatus");
-        if (userObj == null) {
-            throw new GlobalException(ErrorCode.NOT_LOGIN, "未认证");
-        }
         Post post = postService.getOne(new QueryWrapper<Post>().eq("ext_id", extId));
         if (post == null) {
             throw new GlobalException(ErrorCode.NULL_ERROR, "未找到");
@@ -323,7 +326,9 @@ public class PostController {
         }
         Comment c = new Comment();
         c.setPostId(post.getId());
-        c.setUserId(((User) userObj).getUserAccount());
+        long loginId = StpUtil.getLoginIdAsLong();
+        User loginUser = userService.getById(loginId);
+        c.setUserId(loginUser != null ? loginUser.getUserAccount() : String.valueOf(loginId));
         c.setUserInfo(req.getUserInfo());
         c.setBody(req.getBody());
         c.setParentId(req.getParentId());

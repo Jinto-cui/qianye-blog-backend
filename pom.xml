@@ -82,6 +82,19 @@
 			<version>3.5.3.1</version>
 		</dependency>
 
+		<!-- Sa-Token 轻量权限框架 -->
+		<dependency>
+			<groupId>cn.dev33</groupId>
+			<artifactId>sa-token-spring-boot-starter</artifactId>
+			<version>1.37.0</version>
+		</dependency>
+
+		<!-- BCrypt 密码加密（独立于 Spring Security） -->
+		<dependency>
+			<groupId>org.springframework.security</groupId>
+			<artifactId>spring-security-crypto</artifactId>
+		</dependency>
+
 		<!-- https://mvnrepository.com/artifact/junit/junit -->
 		<dependency>
 			<groupId>junit</groupId>

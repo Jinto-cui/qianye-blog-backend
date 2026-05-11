@@ -1,15 +1,20 @@
 package com.qianye.blog.web.controller;
 
+import cn.dev33.satoken.annotation.SaCheckLogin;
+import cn.dev33.satoken.annotation.SaCheckRole;
+import cn.dev33.satoken.stp.StpUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.qianye.blog.common.Result;
 import com.qianye.blog.common.constant.ErrorCode;
 import com.qianye.blog.common.exception.GlobalException;
 import com.qianye.blog.web.model.User;
+import com.qianye.blog.web.model.dto.UserDto;
 import com.qianye.blog.web.model.request.UserLoginRequest;
 import com.qianye.blog.web.model.request.UserRegisterRequest;
 import com.qianye.blog.web.service.UserService;
 import com.qianye.blog.utils.ResultUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,155 +22,81 @@ import javax.servlet.http.HttpServletRequest;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static com.qianye.blog.common.constant.UserConstant.ADMIN_ROLE;
-import static com.qianye.blog.common.constant.UserConstant.USER_LOGIN_STATUS;
-
-/**
- * @Author 浅夜
- * @Description 控制层
- * @DateTime 2023/11/15 23:02
- **/
 @RestController
-@RequestMapping("/user")
+@RequestMapping("rest/v1/user")
 public class UserController {
 
     @Autowired
     private UserService userService;
 
-    /**
-     * 用户注册
-     *
-     * @param userRegisterRequest
-     * @return
-     */
     @PostMapping("/register")
-    public Result<Long> userRegister(@RequestBody UserRegisterRequest userRegisterRequest) {
-        if (userRegisterRequest == null) {
+    public Result<Long> userRegister(@RequestBody UserRegisterRequest req) {
+        if (req == null) {
             throw new GlobalException(ErrorCode.PARAMS_ERROR);
         }
-
-        String userAccount = userRegisterRequest.getUserAccount();
-        String userPassword = userRegisterRequest.getUserPassword();
-        String checkPassword = userRegisterRequest.getCheckPassword();
-        String code = userRegisterRequest.getCode();
-        if (StringUtils.isAllBlank(userAccount, userPassword, checkPassword, code)) {
+        if (StringUtils.isAllBlank(req.getUserAccount(), req.getUserPassword(), req.getCheckPassword())) {
             throw new GlobalException(ErrorCode.PARAMS_ERROR);
         }
-        long result = userService.userRegister(userAccount, userPassword, checkPassword, code);
+        long result = userService.userRegister(
+                req.getUserAccount(), req.getUserPassword(), req.getCheckPassword(),
+                req.getNickname(), req.getEmail());
         return ResultUtils.success(result);
     }
 
-    /**
-     * 用户登录
-     *
-     * @param userLoginRequest
-     * @param request
-     * @return
-     */
     @PostMapping("/login")
-    public Result<User> userLogin(@RequestBody UserLoginRequest userLoginRequest, HttpServletRequest request) {
-        if (userLoginRequest == null) {
-            throw new GlobalException(ErrorCode.PARAMS_ERROR);
+    public Result<UserDto> userLogin(@RequestBody UserLoginRequest req, HttpServletRequest request) {
+        if (req == null || StringUtils.isAllBlank(req.getUserAccount(), req.getUserPassword())) {
+            throw new GlobalException(ErrorCode.PARAMS_ERROR, "用户名或密码错误");
         }
-
-        String userAccount = userLoginRequest.getUserAccount();
-        String userPassword = userLoginRequest.getUserPassword();
-        if (StringUtils.isAllBlank(userAccount, userPassword)) {
-            throw new GlobalException(ErrorCode.PARAMS_ERROR, "用户用或密码错误");
-        }
-        User user = userService.doLogin(userAccount, userPassword, request);
-        return ResultUtils.success(user);
+        User user = userService.doLogin(req.getUserAccount(), req.getUserPassword(), request);
+        UserDto dto = toDto(user);
+        dto.setToken(StpUtil.getTokenValue());
+        return ResultUtils.success(dto);
     }
 
-    /**
-     * 用户注销
-     *
-     * @param request
-     * @return
-     */
     @PostMapping("/logout")
-    public Result<Integer> userLogout(HttpServletRequest request) {
-        if(request == null) {
-            throw new GlobalException(ErrorCode.NOT_LOGIN);
-        }
-        Integer userLogout = userService.userLogout(request);
-        return ResultUtils.success(userLogout);
+    @SaCheckLogin
+    public Result<Void> userLogout(HttpServletRequest request) {
+        userService.userLogout(request);
+        return ResultUtils.success(null);
     }
 
-    /**
-     * 获取当前用户信息
-     *
-     * @param request
-     * @return
-     */
     @GetMapping("/current")
-    public Result<User> currentUser(HttpServletRequest request) {
-        Object userObj = request.getSession().getAttribute(USER_LOGIN_STATUS);
-        User currentUser = (User) userObj;
-        if (currentUser == null) {
-            throw new GlobalException(ErrorCode.NOT_LOGIN, "请先登录");
-        }
-        long userId = currentUser.getId();
-        //todo: 校验用户是否合法
+    @SaCheckLogin
+    public Result<UserDto> currentUser() {
+        long userId = StpUtil.getLoginIdAsLong();
         User user = userService.getById(userId);
-        User safetyUser = userService.getSafetyUser(user);
-        return ResultUtils.success(safetyUser);
+        if (user == null) {
+            throw new GlobalException(ErrorCode.NULL_ERROR, "用户不存在");
+        }
+        return ResultUtils.success(toDto(user));
     }
 
-    /**
-     * 管理员根据用户名搜索用户
-     *
-     * @param username 用户名
-     * @param request  请求体
-     * @return
-     */
     @GetMapping("/search")
-    public Result<List<User>> searchUsers(String username, HttpServletRequest request) {
-        if (!isAdmin(request)) {
-            throw new GlobalException(ErrorCode.NO_AUTH);
+    @SaCheckRole("admin")
+    public Result<List<UserDto>> searchUsers(String keyword) {
+        QueryWrapper<User> qw = new QueryWrapper<>();
+        if (StringUtils.isNotBlank(keyword)) {
+            qw.and(w -> w.like("nickname", keyword).or().like("user_account", keyword));
         }
-
-        QueryWrapper<User> queryWrapper = new QueryWrapper<>();
-        if (!StringUtils.isBlank(username)) {
-            queryWrapper.like("username", username);
-        }
-        List<User> userList = userService.list(queryWrapper);
-        List<User> safetyUserList = userList.stream().map(user -> userService.getSafetyUser(user)).collect(Collectors.toList());
-        return ResultUtils.success(safetyUserList);
+        List<UserDto> list = userService.list(qw).stream()
+                .map(this::toDto)
+                .collect(Collectors.toList());
+        return ResultUtils.success(list);
     }
 
-    /**
-     * 根据id删除用户（逻辑删除）
-     *
-     * @param id
-     * @param request
-     * @return
-     */
     @PostMapping("/delete")
-    public Result<Boolean> deleteUser(@RequestBody long id, HttpServletRequest request) {
-        //鉴权，不是管理员不能删除
-        if (!isAdmin(request)) {
-            throw new GlobalException(ErrorCode.NO_AUTH);
-        }
-
+    @SaCheckRole("admin")
+    public Result<Boolean> deleteUser(@RequestBody long id) {
         if (id <= 0) {
             throw new GlobalException(ErrorCode.PARAMS_ERROR);
         }
-
-        boolean isRemove = userService.removeById(id);
-        return ResultUtils.success(isRemove);
+        return ResultUtils.success(userService.removeById(id));
     }
 
-    /**
-     * 是否为管理员
-     *
-     * @param request
-     * @return
-     */
-    private boolean isAdmin(HttpServletRequest request) {
-        //鉴权，仅管理员可查
-        Object userObject = request.getSession().getAttribute(USER_LOGIN_STATUS);
-        User user = (User) userObject;
-        return user != null && user.getUserRole() == ADMIN_ROLE;
+    private UserDto toDto(User user) {
+        UserDto dto = new UserDto();
+        BeanUtils.copyProperties(user, dto);
+        return dto;
     }
 }

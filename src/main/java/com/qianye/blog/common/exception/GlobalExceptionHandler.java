@@ -1,5 +1,8 @@
 package com.qianye.blog.common.exception;
 
+import cn.dev33.satoken.exception.NotLoginException;
+import cn.dev33.satoken.exception.NotPermissionException;
+import cn.dev33.satoken.exception.NotRoleException;
 import com.qianye.blog.common.Result;
 import com.qianye.blog.common.constant.ErrorCode;
 import com.qianye.blog.utils.ResultUtils;
@@ -9,19 +12,32 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 /**
- * @author: Jinto Cui
- * @desc: 全局异常处理器
- * @date: 2025/12/9 23:00
- * @version: v1.0
+ * 全局异常处理器
+ * 统一处理业务异常 + Sa-Token 鉴权异常
  */
 @Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
     @ResponseBody
-    @ExceptionHandler(GlobalException.class) //指定方法要捕获的异常
+    @ExceptionHandler(GlobalException.class)
     public Result<?> globalExceptionHandler(GlobalException exception) {
-        log.error("系统抛出自定义异常！" + exception.getMessage (), exception);
+        log.error("业务异常: {}", exception.getMessage(), exception);
         return ResultUtils.error(exception);
+    }
+
+    @ResponseBody
+    @ExceptionHandler(NotLoginException.class)
+    public Result<?> notLoginExceptionHandler(NotLoginException e) {
+        log.warn("未登录访问受限资源: {}", e.getMessage());
+        return ResultUtils.error(ErrorCode.NOT_LOGIN, "请先登录");
+    }
+
+    @ResponseBody
+    @ExceptionHandler({NotPermissionException.class, NotRoleException.class})
+    public Result<?> notPermissionExceptionHandler(Exception e) {
+        log.warn("无权限访问: {}", e.getMessage());
+        return ResultUtils.error(ErrorCode.NO_AUTH, "无权访问");
     }
 
     @ResponseBody
