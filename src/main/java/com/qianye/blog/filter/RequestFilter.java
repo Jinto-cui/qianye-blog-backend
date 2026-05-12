@@ -43,14 +43,11 @@ public class RequestFilter implements Filter {
 
         httpRequest.setCharacterEncoding("utf-8");
         httpResponse.setCharacterEncoding("utf-8");
-        if ("OPTIONS".equals(httpRequest.getMethod())) {
-            httpResponse.setStatus(HttpServletResponse.SC_OK);
-            return ;
-        }
         // 记录访问日志
         String URI =  httpRequest.getRequestURI();
         URI = URI.replaceAll("//", "/");
-        if(!"/".equals(URI) && !StringUtils.checkStartsWith(URI, unStartUrls) &&
+        if(!"OPTIONS".equals(httpRequest.getMethod()) && !"/".equals(URI) &&
+                !StringUtils.checkStartsWith(URI, unStartUrls) &&
                 !StringUtils.checkContains(URI, unContainsUrls)){
             Map<String, String[]> param = httpRequest.getParameterMap();
             String ip = IPUtils.getIp(httpRequest);
