@@ -33,3 +33,10 @@ build/
 .vscode/
 
 *.yml
+
+### Project-specific ###
+Agent.md
+claude-progress.md
+feature_list.json
+init.sh
+src/main/java/com/qianye/blog/web/controller/HealthController.java
