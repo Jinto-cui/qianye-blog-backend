@@ -59,7 +59,6 @@ public class PostController {
      * 获取文章列表（limit/offset）
      */
     @GetMapping("/posts")
-    @SaCheckLogin
     public Result<List<PostDto>> listPosts(@RequestParam(required = false, defaultValue = "5") Integer limit,
                                            @RequestParam(required = false, defaultValue = "0") Integer offset) {
         int pageSize = Math.max(1, limit);
