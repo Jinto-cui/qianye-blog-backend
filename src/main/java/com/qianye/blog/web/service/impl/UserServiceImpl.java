@@ -38,9 +38,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         if (userAccount.length() < 4) {
             throw new GlobalException(ErrorCode.PARAMS_ERROR, "账户名长度不能小于4位");
         }
-        if (userPassword.length() < 8 || checkPassword.length() < 8) {
-            throw new GlobalException(ErrorCode.PARAMS_ERROR, "密码长度不小于8位");
-        }
 
         String regEx = "\\pP|\\pS|\\s+";
         Matcher matcher = Pattern.compile(regEx).matcher(userAccount);
@@ -82,9 +79,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         }
         if (userAccount.length() < 4) {
             throw new GlobalException(ErrorCode.PARAMS_ERROR, "账户名长度不能小于4位");
-        }
-        if (userPassword.length() < 8) {
-            throw new GlobalException(ErrorCode.PARAMS_ERROR, "密码长度不小于8位");
         }
 
         String regEx = "\\pP|\\pS|\\s+";
