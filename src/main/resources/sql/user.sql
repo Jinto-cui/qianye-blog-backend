@@ -10,7 +10,7 @@ CREATE TABLE IF NOT EXISTS `user`
     user_password  VARCHAR(128)     NOT NULL COMMENT '密码（BCrypt 加密，长度 ~60，预留余量）',
     nickname       VARCHAR(64)      NULL     COMMENT '昵称 / 展示名',
     email          VARCHAR(128)     NULL     COMMENT '邮箱',
-    avatar_url     VARCHAR(512)     NULL     COMMENT '头像 URL',
+    avatar_key     VARCHAR(512)     NULL     COMMENT '头像 OSS object key',
     bio            VARCHAR(256)     NULL     COMMENT '个人简介（短句）',
     social_links   JSON             NULL     COMMENT '社交链接 [{ "platform": "github", "url": "..." }]',
     role           TINYINT UNSIGNED NOT NULL DEFAULT 0 COMMENT '角色：0 = 普通用户，1 = 管理员',
@@ -38,7 +38,7 @@ CREATE TABLE IF NOT EXISTS `user`
 --   user_password  — BCrypt（$2a$...），扩充至 128 以兼容未来算法升级
 --   nickname       — 替代原 username，语义更清晰
 --   email          — 唯一索引，可用于找回密码 / 订阅通知
---   avatar_url     — 独立字段（不从社交链接 JSON 中提取），高频读取
+--   avatar_key     — 独立字段（不从社交链接 JSON 中提取），高频读取
 --   role           — 缩小至 TINYINT，与 Sa-Token StpInterface 对接
 --   status         — 停用/正常，配合 Sa-Token 登录时校验
 --

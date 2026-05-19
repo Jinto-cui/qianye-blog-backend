@@ -7,56 +7,42 @@ import java.io.Serializable;
 import java.util.Date;
 
 /**
- * 评论
- * 表：bg_comment
+ * 文章评论
+ *
+ * @author: Jinto Cui
+ * @desc: user_id 关联 user 表 JOIN 获取头像昵称，不再冗余存 user_info JSON。
+ *        parent_id 支持嵌套回复（单层或递归均可）。
+ * @date: 2026/05/20
+ * @version: v2.0
+ * @table: comment
  */
-@TableName(value ="bg_comment")
+@TableName(value = "comment")
 @Data
 public class Comment implements Serializable {
-    /**
-     * 主键
-     */
+
+    /** 主键 */
     @TableId
     private Long id;
 
-    /**
-     * 文章ID
-     */
+    /** 文章 ID */
     private Long postId;
 
-    /**
-     * 用户ID
-     */
-    private String userId;
+    /** 评论用户 ID（关联 user.id） */
+    private Long userId;
 
-    /**
-     * 用户信息JSON
-     */
-    private String userInfo;
-
-    /**
-     * 评论内容JSON
-     */
+    /** 评论内容（纯文本或 Markdown 片段） */
     private String body;
 
-    /**
-     * 父评论ID
-     */
+    /** 父评论 ID（NULL 表示顶级评论） */
     private Long parentId;
 
-    /**
-     * 创建时间
-     */
+    /** 创建时间 */
     private Date createdAt;
 
-    /**
-     * 更新时间
-     */
+    /** 更新时间 */
     private Date updatedAt;
 
-    /**
-     * 删除标志（0代表未删除，1代表已删除）
-     */
+    /** 逻辑删除：0 = 未删除，1 = 已删除 */
     @TableLogic
     private Integer deleted;
 

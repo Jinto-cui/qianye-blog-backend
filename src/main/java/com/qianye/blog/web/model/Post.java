@@ -8,95 +8,67 @@ import java.util.Date;
 
 /**
  * 文章
- * 表：bg_post
+ *
+ * @author: Jinto Cui
+ * @desc: 博客文章实体，正文存 Markdown，主图字段扁平化，不再依赖 Sanity Portable Text
+ * @date: 2026/05/19
+ * @version: v2.0
+ * @table: post
  */
-@TableName(value ="bg_post")
+@TableName(value = "post")
 @Data
 public class Post implements Serializable {
-    /**
-     * 主键
-     */
+
+    /** 主键 */
     @TableId
     private Long id;
 
-    /**
-     * 外部ID（前端/_id）
-     */
-    private String extId;
-
-    /**
-     * 短链唯一标识
-     */
-    private String slug;
-
-    /**
-     * 标题
-     */
+    /** 文章标题 */
     private String title;
 
-    /**
-     * 摘要
-     */
+    /** URL 标识符，用于路由 /posts/{slug} */
+    private String slug;
+
+    /** 摘要（列表页展示） */
     private String description;
 
-    /**
-     * 情绪
-     */
+    /** 正文（Markdown 格式，前端 unified/remark 渲染） */
+    private String body;
+
+    /** 情绪：neutral / happy / sad */
     private String mood;
 
-    /**
-     * 发布时间
-     */
+    /** 发布时间（NULL 表示草稿） */
     private Date publishedAt;
 
-    /**
-     * 阅读分钟数
-     */
+    /** 阅读时长（分钟） */
     private Integer readingTime;
 
-    /**
-     * 主图URL
-     */
-    private String mainImageUrl;
+    /** 主图 OSS object key（完整 URL = oss_base_url + main_image_key） */
+    private String mainImageKey;
 
-    /**
-     * 主图LQIP
-     */
+    /** 主图 LQIP（base64 缩略图，前端 blur-up 加载效果） */
     private String mainImageLqip;
 
-    /**
-     * 主色前景
-     */
-    private String mainImageFg;
+    /** 主图主色背景（#RRGGBB） */
+    private String mainImageDominantBg;
 
-    /**
-     * 主色背景
-     */
-    private String mainImageBg;
+    /** 主图主色前景（#RRGGBB） */
+    private String mainImageDominantFg;
 
-    /**
-     * 正文JSON（Portable Text）
-     */
-    private String bodyJson;
-
-    /**
-     * 浏览量
-     */
+    /** 浏览量 */
     private Long views;
 
-    /**
-     * 创建时间
-     */
+    /** 作者 ID（关联 user.id） */
+    private Long authorId;
+
+    /** 创建时间 */
     private Date createdAt;
 
-    /**
-     * 更新时间
-     */
+    /** 更新时间 */
     private Date updatedAt;
 
-    /**
-     * 删除标志（0代表未删除，1代表已删除）
-     */
+    /** 逻辑删除：0 = 未删除，1 = 已删除 */
     @TableLogic
     private Integer deleted;
 

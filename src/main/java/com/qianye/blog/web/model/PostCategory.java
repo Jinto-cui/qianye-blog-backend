@@ -4,27 +4,38 @@ import com.baomidou.mybatisplus.annotation.*;
 import lombok.Data;
 
 import java.io.Serializable;
+import java.util.Date;
 
 /**
- * 文章-分类关系
- * 表：post_category
+ * 文章-分类关联（多对多）
+ *
+ * @author: Jinto Cui
+ * @desc: 关联表，UNIQUE(post_id, category_id) 防止重复关联
+ * @date: 2026/05/19
+ * @version: v2.0
+ * @table: post_category
  */
-@TableName(value ="post_category")
+@TableName(value = "post_category")
 @Data
 public class PostCategory implements Serializable {
-    /**
-     * 文章ID
-     */
+
+    /** 主键 */
+    @TableId
+    private Long id;
+
+    /** 文章 ID */
     private Long postId;
 
-    /**
-     * 分类ID
-     */
+    /** 分类 ID */
     private Long categoryId;
 
-    /**
-     * 删除标志（0代表未删除，1代表已删除）
-     */
+    /** 创建时间 */
+    private Date createdAt;
+
+    /** 更新时间 */
+    private Date updatedAt;
+
+    /** 逻辑删除：0 = 未删除，1 = 已删除 */
     @TableLogic
     private Integer deleted;
 

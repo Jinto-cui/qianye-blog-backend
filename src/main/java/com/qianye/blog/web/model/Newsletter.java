@@ -7,46 +7,39 @@ import java.io.Serializable;
 import java.util.Date;
 
 /**
- * 简报
- * 表：newsletters
+ * 简报推送记录
+ *
+ * @author: Jinto Cui
+ * @desc: 每次推送的历史记录。旧表名 newsletters（复数），修正为单数 newsletter。
+ *        body 存 HTML 或 Markdown，由邮件模板渲染后发送。
+ * @date: 2026/05/20
+ * @version: v2.0
+ * @table: newsletter
  */
-@TableName(value ="newsletters")
+@TableName(value = "newsletter")
 @Data
 public class Newsletter implements Serializable {
-    /**
-     * 主键
-     */
+
+    /** 主键 */
     @TableId
     private Long id;
 
-    /**
-     * 标题
-     */
+    /** 邮件标题 */
     private String subject;
 
-    /**
-     * 正文
-     */
+    /** 邮件正文（HTML 或 Markdown） */
     private String body;
 
-    /**
-     * 发送时间
-     */
+    /** 实际发送时间（NULL 表示草稿/未发送） */
     private Date sentAt;
 
-    /**
-     * 创建时间
-     */
+    /** 创建时间 */
     private Date createdAt;
 
-    /**
-     * 更新时间
-     */
+    /** 更新时间 */
     private Date updatedAt;
 
-    /**
-     * 删除标志（0代表未删除，1代表已删除）
-     */
+    /** 逻辑删除：0 = 未删除，1 = 已删除 */
     @TableLogic
     private Integer deleted;
 

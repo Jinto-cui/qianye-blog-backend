@@ -7,46 +7,36 @@ import java.io.Serializable;
 import java.util.Date;
 
 /**
- * 客墙
- * 表：bg_guestbook
+ * 留言墙
+ *
+ * @author: Jinto Cui
+ * @desc: user_id 关联 user 表 JOIN 获取头像昵称，不再冗余存 user_info JSON。
+ *        body 替代旧 message 字段，与 comment 表命名一致。
+ * @date: 2026/05/20
+ * @version: v2.0
+ * @table: guestbook
  */
-@TableName(value ="bg_guestbook")
+@TableName(value = "guestbook")
 @Data
 public class Guestbook implements Serializable {
-    /**
-     * 主键
-     */
+
+    /** 主键 */
     @TableId
     private Long id;
 
-    /**
-     * 用户ID
-     */
-    private String userId;
+    /** 留言用户 ID（关联 user.id） */
+    private Long userId;
 
-    /**
-     * 用户信息JSON
-     */
-    private String userInfo;
+    /** 留言内容 */
+    private String body;
 
-    /**
-     * 留言内容
-     */
-    private String message;
-
-    /**
-     * 创建时间
-     */
+    /** 创建时间 */
     private Date createdAt;
 
-    /**
-     * 更新时间
-     */
+    /** 更新时间 */
     private Date updatedAt;
 
-    /**
-     * 删除标志（0代表未删除，1代表已删除）
-     */
+    /** 逻辑删除：0 = 未删除，1 = 已删除 */
     @TableLogic
     private Integer deleted;
 

@@ -4,43 +4,43 @@ import com.baomidou.mybatisplus.annotation.*;
 import lombok.Data;
 
 import java.io.Serializable;
+import java.util.Date;
 
 /**
- * 表情计数
- * 表：post_reaction
+ * 文章反应（用户级记录，防重复）
+ *
+ * @author: Jinto Cui
+ * @desc: 每用户每文章每种反应一条记录，(post_id, user_id, reaction_type) 联合唯一。
+ *        旧表是聚合计数（无 user_id / 无防重），新表支持去重 + 按类型计数。
+ *        计数查询：SELECT COUNT(*) FROM post_reaction WHERE post_id=? AND reaction_type=?
+ * @date: 2026/05/20
+ * @version: v2.0
+ * @table: post_reaction
  */
-@TableName(value ="post_reaction")
+@TableName(value = "post_reaction")
 @Data
 public class PostReaction implements Serializable {
-    /**
-     * 文章ID
-     */
+
+    /** 主键 */
     @TableId
+    private Long id;
+
+    /** 文章 ID */
     private Long postId;
 
-    /**
-     * 👏
-     */
-    private Integer clap;
+    /** 用户 ID（关联 user.id） */
+    private Long userId;
 
-    /**
-     * ❤️
-     */
-    private Integer heart;
+    /** 反应类型：clap / heart / fire / thumbs_up */
+    private String reactionType;
 
-    /**
-     * 🔥
-     */
-    private Integer fire;
+    /** 创建时间 */
+    private Date createdAt;
 
-    /**
-     * 👍
-     */
-    private Integer thumbsUp;
+    /** 更新时间 */
+    private Date updatedAt;
 
-    /**
-     * 删除标志（0代表未删除，1代表已删除）
-     */
+    /** 逻辑删除：0 = 未删除，1 = 已删除 */
     @TableLogic
     private Integer deleted;
 

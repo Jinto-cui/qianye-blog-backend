@@ -25,8 +25,8 @@ public class User implements Serializable {
     /** 邮箱 */
     private String email;
 
-    /** 头像 URL */
-    private String avatarUrl;
+    /** 头像 OSS object key（完整 URL = oss_base_url + avatar_key） */
+    private String avatarKey;
 
     /** 个人简介 */
     private String bio;
