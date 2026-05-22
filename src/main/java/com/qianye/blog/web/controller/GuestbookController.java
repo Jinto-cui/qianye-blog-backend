@@ -49,9 +49,8 @@ public class GuestbookController {
         }
 
         Guestbook gb = new Guestbook();
-        gb.setUserId(userAccount);
-        gb.setUserInfo(req.getUserInfo());
-        gb.setMessage(req.getMessage());
+        gb.setUserId(StpUtil.getLoginIdAsLong());
+        gb.setBody(req.getMessage());
         guestbookService.save(gb);
         return ResultUtils.success(gb);
     }
