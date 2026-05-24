@@ -42,3 +42,7 @@ init.sh
 src/main/java/com/qianye/blog/web/controller/HealthController.java
 # design doc
 DESIGN.md
+
+# misc
+.DS_Store
+*.pem
