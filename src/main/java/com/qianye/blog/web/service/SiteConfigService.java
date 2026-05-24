@@ -1,7 +1,7 @@
 package com.qianye.blog.web.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.qianye.blog.web.model.SiteConfig;
+import com.qianye.blog.web.model.entity.SiteConfig;
 
 /**
  * 站点配置服务

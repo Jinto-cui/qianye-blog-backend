@@ -5,7 +5,7 @@ import cn.dev33.satoken.stp.StpUtil;
 import com.qianye.blog.common.Result;
 import com.qianye.blog.common.constant.ErrorCode;
 import com.qianye.blog.common.exception.GlobalException;
-import com.qianye.blog.web.model.Comment;
+import com.qianye.blog.web.model.entity.Comment;
 import com.qianye.blog.web.model.dto.PostDetailDto;
 import com.qianye.blog.web.model.dto.PostDto;
 import com.qianye.blog.web.model.request.CreateCommentRequest;

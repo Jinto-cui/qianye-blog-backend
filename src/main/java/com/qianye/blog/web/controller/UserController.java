@@ -7,7 +7,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.qianye.blog.common.Result;
 import com.qianye.blog.common.constant.ErrorCode;
 import com.qianye.blog.common.exception.GlobalException;
-import com.qianye.blog.web.model.User;
+import com.qianye.blog.web.model.entity.User;
 import com.qianye.blog.web.model.dto.UserDto;
 import com.qianye.blog.web.model.request.UserLoginRequest;
 import com.qianye.blog.web.model.request.UserRegisterRequest;

@@ -1,6 +1,6 @@
 package com.qianye.blog.web.mapper;
 
-import com.qianye.blog.web.model.User;
+import com.qianye.blog.web.model.entity.User;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 
 /**

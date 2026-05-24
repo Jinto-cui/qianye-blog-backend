@@ -1,4 +1,4 @@
-package com.qianye.blog.web.model;
+package com.qianye.blog.web.model.entity;
 
 import com.baomidou.mybatisplus.annotation.*;
 import lombok.Data;
@@ -7,28 +7,31 @@ import java.io.Serializable;
 import java.util.Date;
 
 /**
- * 留言墙
+ * 简报推送记录
  *
  * @author: Jinto Cui
- * @desc: user_id 关联 user 表 JOIN 获取头像昵称，不再冗余存 user_info JSON。
- *        body 替代旧 message 字段，与 comment 表命名一致。
+ * @desc: 每次推送的历史记录。旧表名 newsletters（复数），修正为单数 newsletter。
+ *        body 存 HTML 或 Markdown，由邮件模板渲染后发送。
  * @date: 2026/05/20
  * @version: v2.0
- * @table: guestbook
+ * @table: newsletter
  */
-@TableName(value = "guestbook")
+@TableName(value = "newsletter")
 @Data
-public class Guestbook implements Serializable {
+public class Newsletter implements Serializable {
 
     /** 主键 */
     @TableId
     private Long id;
 
-    /** 留言用户 ID（关联 user.id） */
-    private Long userId;
+    /** 邮件标题 */
+    private String subject;
 
-    /** 留言内容 */
+    /** 邮件正文（HTML 或 Markdown） */
     private String body;
+
+    /** 实际发送时间（NULL 表示草稿/未发送） */
+    private Date sentAt;
 
     /** 创建时间 */
     private Date createdAt;

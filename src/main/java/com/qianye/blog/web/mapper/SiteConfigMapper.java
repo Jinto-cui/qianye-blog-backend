@@ -1,7 +1,7 @@
 package com.qianye.blog.web.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.qianye.blog.web.model.SiteConfig;
+import com.qianye.blog.web.model.entity.SiteConfig;
 
 /**
  * 站点配置 Mapper

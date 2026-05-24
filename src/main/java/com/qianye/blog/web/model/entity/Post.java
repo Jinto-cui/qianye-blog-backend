@@ -1,4 +1,4 @@
-package com.qianye.blog.web.model;
+package com.qianye.blog.web.model.entity;
 
 import com.baomidou.mybatisplus.annotation.*;
 import lombok.Data;

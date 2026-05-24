@@ -1,7 +1,7 @@
 package com.qianye.blog.web.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.qianye.blog.web.model.Category;
+import com.qianye.blog.web.model.entity.Category;
 
 public interface CategoryService extends IService<Category> {
 }

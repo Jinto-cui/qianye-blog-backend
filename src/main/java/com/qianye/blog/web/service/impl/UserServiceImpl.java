@@ -5,7 +5,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.qianye.blog.common.constant.ErrorCode;
 import com.qianye.blog.common.exception.GlobalException;
-import com.qianye.blog.web.model.User;
+import com.qianye.blog.web.model.entity.User;
 import com.qianye.blog.web.service.UserService;
 import com.qianye.blog.web.mapper.UserMapper;
 import lombok.extern.slf4j.Slf4j;

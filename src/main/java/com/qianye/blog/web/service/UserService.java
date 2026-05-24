@@ -1,6 +1,6 @@
 package com.qianye.blog.web.service;
 
-import com.qianye.blog.web.model.User;
+import com.qianye.blog.web.model.entity.User;
 import com.baomidou.mybatisplus.extension.service.IService;
 
 import javax.servlet.http.HttpServletRequest;

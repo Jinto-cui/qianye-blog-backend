@@ -1,7 +1,7 @@
 package com.qianye.blog.web.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.qianye.blog.web.model.Subscriber;
+import com.qianye.blog.web.model.entity.Subscriber;
 
 /**
  * 简报订阅者 Mapper

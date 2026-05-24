@@ -2,7 +2,7 @@ package com.qianye.blog.web.service.impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.qianye.blog.web.mapper.PostCategoryMapper;
-import com.qianye.blog.web.model.PostCategory;
+import com.qianye.blog.web.model.entity.PostCategory;
 import com.qianye.blog.web.service.PostCategoryService;
 import org.springframework.stereotype.Service;
 

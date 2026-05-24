@@ -4,7 +4,7 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.qianye.blog.common.Result;
-import com.qianye.blog.web.model.SiteConfig;
+import com.qianye.blog.web.model.entity.SiteConfig;
 import com.qianye.blog.web.service.SiteConfigService;
 import com.qianye.blog.utils.ResultUtils;
 import org.springframework.beans.factory.annotation.Autowired;

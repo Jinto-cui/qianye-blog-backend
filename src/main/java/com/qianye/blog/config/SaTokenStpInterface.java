@@ -1,7 +1,7 @@
 package com.qianye.blog.config;
 
 import cn.dev33.satoken.stp.StpInterface;
-import com.qianye.blog.web.model.User;
+import com.qianye.blog.web.model.entity.User;
 import com.qianye.blog.web.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;

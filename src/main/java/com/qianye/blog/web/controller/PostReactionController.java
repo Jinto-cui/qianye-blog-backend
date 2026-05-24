@@ -3,7 +3,7 @@ package com.qianye.blog.web.controller;
 import com.qianye.blog.common.Result;
 import com.qianye.blog.common.constant.ErrorCode;
 import com.qianye.blog.common.exception.GlobalException;
-import com.qianye.blog.web.model.PostReaction;
+import com.qianye.blog.web.model.entity.PostReaction;
 import com.qianye.blog.web.service.PostReactionService;
 import com.qianye.blog.utils.ResultUtils;
 import org.springframework.beans.factory.annotation.Autowired;

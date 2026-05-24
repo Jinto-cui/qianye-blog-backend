@@ -1,4 +1,4 @@
-package com.qianye.blog.web.model;
+package com.qianye.blog.web.model.entity;
 
 import com.baomidou.mybatisplus.annotation.*;
 import lombok.Data;
@@ -7,31 +7,34 @@ import java.io.Serializable;
 import java.util.Date;
 
 /**
- * 简报推送记录
+ * 文章评论
  *
  * @author: Jinto Cui
- * @desc: 每次推送的历史记录。旧表名 newsletters（复数），修正为单数 newsletter。
- *        body 存 HTML 或 Markdown，由邮件模板渲染后发送。
+ * @desc: user_id 关联 user 表 JOIN 获取头像昵称，不再冗余存 user_info JSON。
+ *        parent_id 支持嵌套回复（单层或递归均可）。
  * @date: 2026/05/20
  * @version: v2.0
- * @table: newsletter
+ * @table: comment
  */
-@TableName(value = "newsletter")
+@TableName(value = "comment")
 @Data
-public class Newsletter implements Serializable {
+public class Comment implements Serializable {
 
     /** 主键 */
     @TableId
     private Long id;
 
-    /** 邮件标题 */
-    private String subject;
+    /** 文章 ID */
+    private Long postId;
 
-    /** 邮件正文（HTML 或 Markdown） */
+    /** 评论用户 ID（关联 user.id） */
+    private Long userId;
+
+    /** 评论内容（纯文本或 Markdown 片段） */
     private String body;
 
-    /** 实际发送时间（NULL 表示草稿/未发送） */
-    private Date sentAt;
+    /** 父评论 ID（NULL 表示顶级评论） */
+    private Long parentId;
 
     /** 创建时间 */
     private Date createdAt;

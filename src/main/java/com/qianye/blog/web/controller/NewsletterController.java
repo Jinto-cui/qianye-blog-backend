@@ -5,7 +5,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.qianye.blog.common.Result;
 import com.qianye.blog.common.constant.ErrorCode;
 import com.qianye.blog.common.exception.GlobalException;
-import com.qianye.blog.web.model.Newsletter;
+import com.qianye.blog.web.model.entity.Newsletter;
 import com.qianye.blog.web.model.request.NewsletterPageRequest;
 import com.qianye.blog.web.service.NewsletterService;
 import com.qianye.blog.utils.ResultUtils;

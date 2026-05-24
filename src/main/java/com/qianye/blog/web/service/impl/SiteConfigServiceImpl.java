@@ -2,7 +2,7 @@ package com.qianye.blog.web.service.impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.qianye.blog.web.mapper.SiteConfigMapper;
-import com.qianye.blog.web.model.SiteConfig;
+import com.qianye.blog.web.model.entity.SiteConfig;
 import com.qianye.blog.web.service.SiteConfigService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

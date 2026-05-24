@@ -1,7 +1,7 @@
 package com.qianye.blog.web.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.qianye.blog.web.model.Project;
+import com.qianye.blog.web.model.entity.Project;
 
 /**
  * 项目展示 Mapper

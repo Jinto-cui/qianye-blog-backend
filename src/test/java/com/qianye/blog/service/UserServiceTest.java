@@ -1,6 +1,6 @@
 //package com.qianye.blog.service;
 //
-//import com.qianye.blog.web.model.User;
+//import com.qianye.blog.web.model.entity.User;
 //import com.qianye.blog.web.service.UserService;
 //import org.junit.jupiter.api.Assertions;
 //import org.junit.jupiter.api.Test;

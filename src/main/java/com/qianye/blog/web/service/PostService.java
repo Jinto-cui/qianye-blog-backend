@@ -1,8 +1,8 @@
 package com.qianye.blog.web.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.qianye.blog.web.model.Comment;
-import com.qianye.blog.web.model.Post;
+import com.qianye.blog.web.model.entity.Comment;
+import com.qianye.blog.web.model.entity.Post;
 import com.qianye.blog.web.model.dto.PostDetailDto;
 import com.qianye.blog.web.model.dto.PostDto;
 import com.qianye.blog.web.model.request.CreateCommentRequest;

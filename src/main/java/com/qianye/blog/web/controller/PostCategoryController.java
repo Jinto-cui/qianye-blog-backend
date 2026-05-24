@@ -4,7 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.qianye.blog.common.Result;
 import com.qianye.blog.common.constant.ErrorCode;
 import com.qianye.blog.common.exception.GlobalException;
-import com.qianye.blog.web.model.PostCategory;
+import com.qianye.blog.web.model.entity.PostCategory;
 import com.qianye.blog.web.service.PostCategoryService;
 import com.qianye.blog.utils.ResultUtils;
 import org.springframework.beans.factory.annotation.Autowired;
