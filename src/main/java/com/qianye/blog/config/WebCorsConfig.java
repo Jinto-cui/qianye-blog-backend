@@ -18,7 +18,7 @@ public class WebCorsConfig implements WebMvcConfigurer {
         registry.addMapping("/rest/v1/**")
                 .allowedOrigins("http://localhost:3000")
                 .allowedMethods("GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS")
-                .allowedHeaders("*") // 允许所有头部，确保requestId能放入到响应头
+                .allowedHeaders("Content-Type", "token", "Authorization")
                 .allowCredentials(true)
                 .maxAge(3600);
     }

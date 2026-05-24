@@ -17,4 +17,9 @@ public interface SiteConfigService extends IService<SiteConfig> {
      * 获取站点配置（单行，id=1）
      */
     SiteConfig getConfig();
+
+    /**
+     * 更新站点配置（单行，id 固定为 1）
+     */
+    void updateConfig(SiteConfig config);
 }

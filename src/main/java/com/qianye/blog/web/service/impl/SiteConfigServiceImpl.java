@@ -32,4 +32,11 @@ public class SiteConfigServiceImpl extends ServiceImpl<SiteConfigMapper, SiteCon
         }
         return config;
     }
+
+    @Override
+    public void updateConfig(SiteConfig config) {
+        config.setId(CONFIG_ID);
+        updateById(config);
+        log.info("站点配置已更新");
+    }
 }
