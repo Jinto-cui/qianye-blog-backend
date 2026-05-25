@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.qianye.blog.common.constant.ErrorCode;
 import com.qianye.blog.common.exception.GlobalException;
+import com.qianye.blog.oss.OssClient;
 import com.qianye.blog.web.mapper.PostMapper;
 import com.qianye.blog.web.model.dto.PostDetailDto;
 import com.qianye.blog.web.model.dto.PostDto;
@@ -40,6 +41,8 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post>
     private CategoryService categoryService;
     @Autowired
     private UserService userService;
+    @Autowired
+    private OssClient ossClient;
 
     @Override
     public List<PostDto> listPosts(int limit, int offset) {
@@ -161,7 +164,19 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post>
         dto.set_id(String.valueOf(post.getId()));
         dto.setTitle(post.getTitle());
         dto.setSlug(post.getSlug());
-        dto.setMainImage(null);  // v2.0 TODO: Phase 1 重构 DTO 映射
+        // 组装 mainImage（OSS key → 签名 URL）
+        PostDto.MainImage mi = new PostDto.MainImage();
+        mi.set_ref(post.getMainImageKey());
+        PostDto.Asset asset = new PostDto.Asset();
+        asset.setUrl(post.getMainImageKey() != null
+                ? ossClient.getAccessUrl(post.getMainImageKey(), 3600) : null);
+        asset.setLqip(post.getMainImageLqip());
+        PostDto.Dominant dom = new PostDto.Dominant();
+        dom.setBackground(post.getMainImageDominantBg());
+        dom.setForeground(post.getMainImageDominantFg());
+        asset.setDominant(dom);
+        mi.setAsset(asset);
+        dto.setMainImage(mi);
         dto.setPublishedAt(post.getPublishedAt() != null
                 ? post.getPublishedAt().toInstant().toString() : null);
         dto.setDescription(post.getDescription());
@@ -184,7 +199,7 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post>
         dto.setReadingTime(base.getReadingTime());
         dto.setMood(base.getMood());
         dto.setBody(post.getBody());        // v2.0: Markdown 字符串直接返回
-        dto.setHeadings(new ArrayList<>());
+        dto.setHeadings(parseHeadings(post.getBody()));
         dto.setRelated(getRelatedPosts(post));
         return dto;
     }
@@ -216,5 +231,31 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post>
         QueryWrapper<Post> qw = new QueryWrapper<>();
         qw.in("id", candidatePostIds).orderByDesc("published_at").last("limit 4");
         return list(qw).stream().map(this::toDto).collect(Collectors.toList());
+    }
+
+    private List<Object> parseHeadings(String markdown) {
+        List<Object> headings = new ArrayList<>();
+        if (markdown == null || markdown.isEmpty()) return headings;
+        for (String line : markdown.split("\\n")) {
+            line = line.trim();
+            if (line.startsWith("## ")) {
+                String text = line.substring(3).trim();
+                String id = text.toLowerCase().replaceAll("[^a-z0-9\\u4e00-\\u9fff]+", "-").replaceAll("^-|-$", "");
+                Map<String, String> h = new LinkedHashMap<>();
+                h.put("style", "h2");
+                h.put("text", text);
+                h.put("id", id);
+                headings.add(h);
+            } else if (line.startsWith("### ")) {
+                String text = line.substring(4).trim();
+                String id = text.toLowerCase().replaceAll("[^a-z0-9\\u4e00-\\u9fff]+", "-").replaceAll("^-|-$", "");
+                Map<String, String> h = new LinkedHashMap<>();
+                h.put("style", "h3");
+                h.put("text", text);
+                h.put("id", id);
+                headings.add(h);
+            }
+        }
+        return headings;
     }
 }
