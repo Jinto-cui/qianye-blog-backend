@@ -1,5 +1,6 @@
 package com.qianye.blog.web.controller;
 
+import cn.dev33.satoken.annotation.SaCheckRole;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.qianye.blog.common.Result;
@@ -16,11 +17,16 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 /**
- * 分类接口
- * 提供分类的增删改查与分页查询
+ * 分类旧管理接口
+ *
+ * @author: Jinto Cui
+ * @desc: 临时保留旧 CRUD 能力，统一收口到 admin legacy 前缀并要求 admin 角色
+ * @date: 2026/06/04 23:45
+ * @version: v1.1
  */
 @RestController
-@RequestMapping("/category")
+@RequestMapping("/rest/v1/admin/legacy/category")
+@SaCheckRole("admin")
 public class CategoryController {
     @Autowired
     private CategoryService categoryService;
@@ -71,7 +77,7 @@ public class CategoryController {
         Page<Category> page = new Page<>(pageNum, pageSize);
         QueryWrapper<Category> qw = new QueryWrapper<>();
         if (StringUtils.isNotBlank(req.getTitle())) {
-            qw.like("title", req.getTitle());
+            qw.like("name", req.getTitle());
         }
         return ResultUtils.success(categoryService.page(page, qw));
     }

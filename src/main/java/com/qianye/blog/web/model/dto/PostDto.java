@@ -4,6 +4,14 @@ import lombok.Data;
 
 import java.util.List;
 
+/**
+ * 文章列表响应 DTO
+ *
+ * @author: Jinto Cui
+ * @desc: 对齐前端文章卡片字段，_id 返回 post.id 字符串，主图由 OSS key 转换为可访问 URL
+ * @date: 2026/06/04 23:40
+ * @version: v1.1
+ */
 @Data
 public class PostDto {
     private String _id;

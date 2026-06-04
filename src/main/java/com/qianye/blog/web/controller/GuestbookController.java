@@ -17,6 +17,14 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+/**
+ * 留言墙公开接口
+ *
+ * @author: Jinto Cui
+ * @desc: 公开读取留言列表，登录用户可发表留言，留言用户通过 user_id 关联 user 表
+ * @date: 2026/06/04 23:50
+ * @version: v1.1
+ */
 @RestController
 @RequestMapping("/rest/v1")
 public class GuestbookController {
@@ -38,10 +46,12 @@ public class GuestbookController {
     public Result<Guestbook> addGuestbook(@RequestBody CreateGuestbookRequest req) {
         long loginId = StpUtil.getLoginIdAsLong();
         User user = userService.getById(loginId);
-        String userAccount = user != null ? user.getUserAccount() : String.valueOf(loginId);
+        if (user == null) {
+            throw new GlobalException(ErrorCode.NOT_LOGIN, "用户不存在");
+        }
 
         Guestbook last = guestbookService.getOne(new QueryWrapper<Guestbook>()
-                .eq("user_id", userAccount)
+                .eq("user_id", loginId)
                 .orderByDesc("created_at")
                 .last("limit 1"));
         if (last != null) {

@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("rest/v1/user")
+@RequestMapping("/rest/v1/user")
 public class UserController {
 
     @Autowired

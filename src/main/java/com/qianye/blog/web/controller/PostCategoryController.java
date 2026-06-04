@@ -1,5 +1,6 @@
 package com.qianye.blog.web.controller;
 
+import cn.dev33.satoken.annotation.SaCheckRole;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.qianye.blog.common.Result;
 import com.qianye.blog.common.constant.ErrorCode;
@@ -13,11 +14,16 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 /**
- * 文章-分类关系接口
- * 提供文章与分类的关联维护，复合主键操作
+ * 文章-分类旧管理接口
+ *
+ * @author: Jinto Cui
+ * @desc: 临时保留旧关联维护能力，统一收口到 admin legacy 前缀并要求 admin 角色
+ * @date: 2026/06/04 23:45
+ * @version: v1.1
  */
 @RestController
-@RequestMapping("/post-category")
+@RequestMapping("/rest/v1/admin/legacy/post-category")
+@SaCheckRole("admin")
 public class PostCategoryController {
     @Autowired
     private PostCategoryService postCategoryService;

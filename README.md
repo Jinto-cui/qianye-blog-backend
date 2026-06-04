@@ -67,21 +67,26 @@ java -jar target/qianye_blog_backend-0.0.1-SNAPSHOT.jar --spring.profiles.active
 
 ## 接口前缀与分组
 
-项目里存在两类接口前缀：
+项目接口统一使用 `/rest/v1/**` 前缀：
 
-- 内容接口（主要博客接口）：`/rest/v1/**`
-- 管理与基础 CRUD 接口：`/user/**`、`/category/**`、`/comment/**`、`/newsletter/**`、`/post-view/**`、`/post-reaction/**`、`/post-category/**`、`/subscribed-user/**`
+- 公开内容接口：`/rest/v1/posts`、`/rest/v1/site/config`、`/rest/v1/guestbook`
+- 用户接口：`/rest/v1/user/**`
+- 管理后台接口：`/rest/v1/admin/**`
+- 旧基础 CRUD 临时兼容接口：`/rest/v1/admin/legacy/**`，全部要求 admin 角色
 
 常用接口示例：
 
 - `GET /rest/v1/posts`
 - `GET /rest/v1/posts/{slug}`
 - `POST /rest/v1/posts/{id}/views/incr`
+- `GET /rest/v1/posts/{id}/reactions`
+- `PATCH /rest/v1/posts/{id}/reactions?index=0`
 - `GET /rest/v1/posts/{id}/comments`
 - `POST /rest/v1/posts/{id}/comments`
-- `POST /user/register`
-- `POST /user/login`
-- `GET /user/current`
+- `GET /rest/v1/site/config`
+- `POST /rest/v1/user/register`
+- `POST /rest/v1/user/login`
+- `GET /rest/v1/user/current`
 
 ## 统一返回结构
 

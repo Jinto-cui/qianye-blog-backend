@@ -21,8 +21,12 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * 文章接口
- * 提供文章的增删改查与分页查询
+ * 文章公开接口
+ *
+ * @author: Jinto Cui
+ * @desc: 提供文章列表、详情、浏览量、反应和评论接口，所有文章 ID 均使用 post.id
+ * @date: 2026/06/04 23:40
+ * @version: v2.1
  */
 @RestController
 @RequestMapping("/rest/v1")
@@ -58,31 +62,32 @@ public class PostController {
     }
 
     /**
-     * 递增浏览量并返回最新值（ext_id）
+     * 递增浏览量并返回最新值
      */
     @PostMapping("/posts/{id}/views/incr")
-    public Result<Long> incrViews(@PathVariable("id") String extId) {
-        return ResultUtils.success(postService.incrViews(extId));
+    public Result<Long> incrViews(@PathVariable("id") Long postId) {
+        return ResultUtils.success(postService.incrViews(postId));
     }
 
     /**
-     * 批量查询浏览量（ext_id 列表）
+     * 批量查询浏览量（post.id 列表）
      */
     @GetMapping("/posts/views")
     public Result<List<Long>> batchViews(@RequestParam("ids") String ids) {
-        List<String> extIds = Arrays.stream(ids.split(","))
+        List<Long> postIds = Arrays.stream(ids.split(","))
                 .map(String::trim)
                 .filter(StringUtils::isNotBlank)
+                .map(this::parsePostId)
                 .collect(Collectors.toList());
-        return ResultUtils.success(postService.batchViews(extIds));
+        return ResultUtils.success(postService.batchViews(postIds));
     }
 
     /**
      * 获取文章表情计数（顺序：[clap, heart, fire, thumbsUp]）
      */
     @GetMapping("/posts/{id}/reactions")
-    public Result<List<Integer>> getReactions(@PathVariable("id") String extId) {
-        return ResultUtils.success(postService.getReactions(extId));
+    public Result<List<Integer>> getReactions(@PathVariable("id") Long postId) {
+        return ResultUtils.success(postService.getReactions(postId));
     }
 
     /**
@@ -90,30 +95,39 @@ public class PostController {
      */
     @SaCheckLogin
     @PatchMapping("/posts/{id}/reactions")
-    public Result<List<Integer>> incrReaction(@PathVariable("id") String extId,
+    public Result<List<Integer>> incrReaction(@PathVariable("id") Long postId,
                                               @RequestParam("index") Integer index) {
         if (index == null) {
             throw new GlobalException(ErrorCode.PARAMS_ERROR, "index非法");
         }
-        return ResultUtils.success(postService.incrReaction(extId, index));
+        long loginId = StpUtil.getLoginIdAsLong();
+        return ResultUtils.success(postService.incrReaction(postId, index, loginId));
     }
 
     /**
-     * 获取文章评论列表（升序，ext_id）
+     * 获取文章评论列表（升序）
      */
     @GetMapping("/posts/{id}/comments")
-    public Result<List<Comment>> listComments(@PathVariable("id") String extId) {
-        return ResultUtils.success(postService.listComments(extId));
+    public Result<List<Comment>> listComments(@PathVariable("id") Long postId) {
+        return ResultUtils.success(postService.listComments(postId));
     }
 
     /**
-     * 新增评论（需鉴权，ext_id）
+     * 新增评论（需鉴权）
      */
     @SaCheckLogin
     @PostMapping("/posts/{id}/comments")
-    public Result<Comment> addComment(@PathVariable("id") String extId,
+    public Result<Comment> addComment(@PathVariable("id") Long postId,
                                       @RequestBody CreateCommentRequest req) {
         long loginId = StpUtil.getLoginIdAsLong();
-        return ResultUtils.success(postService.addComment(extId, req, loginId));
+        return ResultUtils.success(postService.addComment(postId, req, loginId));
+    }
+
+    private Long parsePostId(String id) {
+        try {
+            return Long.parseLong(id);
+        } catch (NumberFormatException e) {
+            throw new GlobalException(ErrorCode.PARAMS_ERROR, "文章ID非法");
+        }
     }
 }

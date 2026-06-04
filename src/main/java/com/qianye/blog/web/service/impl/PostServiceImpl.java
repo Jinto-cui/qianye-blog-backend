@@ -22,9 +22,9 @@ import java.util.stream.Collectors;
  * 文章服务实现
  *
  * @author: Jinto Cui
- * @desc: v2.0 适配新表结构，移除 PostView，views 直接存 post 表
- * @date: 2026/05/22
- * @version: v2.0
+ * @desc: v2.1 适配新表结构，文章交互接口统一使用 post.id，移除 ext_id 运行依赖
+ * @date: 2026/05/22 23:58
+ * @version: v2.1
  */
 @Service
 @Slf4j
@@ -72,29 +72,27 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post>
     }
 
     @Override
-    public Long incrViews(String extId) {
-        // v2.0: views 直接存 post 表
-        Post post = findPostByExtId(extId);
+    public Long incrViews(Long postId) {
+        Post post = findPostById(postId);
         post.setViews(post.getViews() + 1);
         updateById(post);
+        log.info("文章浏览量递增, postId={}, views={}", postId, post.getViews());
         return post.getViews();
     }
 
     @Override
-    public List<Long> batchViews(List<String> extIds) {
+    public List<Long> batchViews(List<Long> postIds) {
         List<Long> result = new ArrayList<>();
-        for (String extId : extIds) {
-            Post post = getOne(new QueryWrapper<Post>().eq("ext_id", extId));
+        for (Long postId : postIds) {
+            Post post = getById(postId);
             result.add(post == null ? 0L : post.getViews());
         }
         return result;
     }
 
     @Override
-    public List<Integer> getReactions(String extId) {
-        // v2.0: 由 COUNT GROUP BY 查询，此处返回空数组占位
-        Post post = findPostByExtId(extId);
-        if (post == null) return Arrays.asList(0, 0, 0, 0);
+    public List<Integer> getReactions(Long postId) {
+        Post post = findPostById(postId);
         QueryWrapper<PostReaction> qw = new QueryWrapper<PostReaction>().eq("post_id", post.getId());
         List<PostReaction> list = postReactionService.list(qw);
         int clap = 0, heart = 0, fire = 0, thumbsUp = 0;
@@ -110,18 +108,30 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post>
     }
 
     @Override
-    public List<Integer> incrReaction(String extId, int index) {
+    public List<Integer> incrReaction(Long postId, int index, long loginId) {
         if (index < 0 || index > 3) {
             throw new GlobalException(ErrorCode.PARAMS_ERROR, "index 非法");
         }
-        // v2.0: 用户级反应记录，需要 loginId。此处为兼容旧接口仅返回计数
-        Post post = findPostByExtId(extId);
-        return getReactions(extId);
+        Post post = findPostById(postId);
+        String reactionType = reactionType(index);
+        QueryWrapper<PostReaction> qw = new QueryWrapper<PostReaction>()
+                .eq("post_id", post.getId())
+                .eq("user_id", loginId)
+                .eq("reaction_type", reactionType);
+        if (postReactionService.getOne(qw) == null) {
+            PostReaction reaction = new PostReaction();
+            reaction.setPostId(post.getId());
+            reaction.setUserId(loginId);
+            reaction.setReactionType(reactionType);
+            postReactionService.save(reaction);
+            log.info("文章反应新增, postId={}, userId={}, reactionType={}", postId, loginId, reactionType);
+        }
+        return getReactions(postId);
     }
 
     @Override
-    public List<Comment> listComments(String extId) {
-        Post post = findPostByExtId(extId);
+    public List<Comment> listComments(Long postId) {
+        Post post = findPostById(postId);
         QueryWrapper<Comment> qw = new QueryWrapper<Comment>()
                 .eq("post_id", post.getId())
                 .orderByAsc("created_at");
@@ -129,8 +139,8 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post>
     }
 
     @Override
-    public Comment addComment(String extId, CreateCommentRequest req, long loginId) {
-        Post post = findPostByExtId(extId);
+    public Comment addComment(Long postId, CreateCommentRequest req, long loginId) {
+        Post post = findPostById(postId);
         if (req.getParentId() != null) {
             Comment parent = commentService.getById(req.getParentId());
             if (parent == null || !parent.getPostId().equals(post.getId())) {
@@ -143,20 +153,36 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post>
         c.setBody(req.getBody());
         c.setParentId(req.getParentId());
         commentService.save(c);
+        log.info("文章评论新增, postId={}, userId={}, commentId={}", postId, loginId, c.getId());
         return c;
     }
 
     // ==================== private helpers ====================
 
     /**
-     * 按 ext_id 查文章（兼容旧接口，ext_id 仅存在于旧数据）
+     * 按主键查文章，避免继续依赖旧 Sanity ext_id 字段
      */
-    private Post findPostByExtId(String extId) {
-        Post post = getOne(new QueryWrapper<Post>().eq("ext_id", extId));
+    private Post findPostById(Long postId) {
+        Post post = getById(postId);
         if (post == null) {
             throw new GlobalException(ErrorCode.NULL_ERROR, "文章不存在");
         }
         return post;
+    }
+
+    private String reactionType(int index) {
+        switch (index) {
+            case 0:
+                return "clap";
+            case 1:
+                return "heart";
+            case 2:
+                return "fire";
+            case 3:
+                return "thumbs_up";
+            default:
+                throw new GlobalException(ErrorCode.PARAMS_ERROR, "index 非法");
+        }
     }
 
     private PostDto toDto(Post post) {

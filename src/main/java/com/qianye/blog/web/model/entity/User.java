@@ -6,6 +6,14 @@ import lombok.Data;
 import java.io.Serializable;
 import java.util.Date;
 
+/**
+ * 用户实体
+ *
+ * @author: Jinto Cui
+ * @desc: 存储登录账号、BCrypt 密码、展示资料和 Sa-Token 角色来源字段
+ * @date: 2025/11/23 23:40
+ * @version: v1.1
+ */
 @TableName(value = "user")
 @Data
 public class User implements Serializable {

@@ -1,5 +1,7 @@
 package com.qianye.blog.web.controller;
 
+import cn.dev33.satoken.annotation.SaCheckRole;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.qianye.blog.common.Result;
 import com.qianye.blog.common.constant.ErrorCode;
 import com.qianye.blog.common.exception.GlobalException;
@@ -12,24 +14,29 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 /**
- * 文章表情计数接口
- * 提供四种表情计数的维护（👏❤️🔥👍）
+ * 文章反应旧管理接口
+ *
+ * @author: Jinto Cui
+ * @desc: 临时保留旧反应记录维护能力，统一收口到 admin legacy 前缀并要求 admin 角色
+ * @date: 2026/06/04 23:45
+ * @version: v1.1
  */
 @RestController
-@RequestMapping("/post-reaction")
+@RequestMapping("/rest/v1/admin/legacy/post-reaction")
+@SaCheckRole("admin")
 public class PostReactionController {
     @Autowired
     private PostReactionService postReactionService;
 
     /**
-     * 新增或初始化表情计数
-     * @param entity 表情计数实体（主键为 postId）
-     * @return 文章ID
+     * 新增文章反应记录
+     * @param entity 文章反应实体
+     * @return 主键 ID
      */
     @PostMapping("/add")
     public Result<Long> add(@RequestBody PostReaction entity) {
         postReactionService.save(entity);
-        return ResultUtils.success(entity.getPostId());
+        return ResultUtils.success(entity.getId());
     }
 
     /**
@@ -42,7 +49,10 @@ public class PostReactionController {
         if (postId == null || postId <= 0) {
             throw new GlobalException(ErrorCode.PARAMS_ERROR);
         }
-        return ResultUtils.success(postReactionService.getById(postId));
+        QueryWrapper<PostReaction> qw = new QueryWrapper<PostReaction>()
+                .eq("post_id", postId)
+                .last("limit 1");
+        return ResultUtils.success(postReactionService.getOne(qw));
     }
 
     /**
@@ -55,28 +65,28 @@ public class PostReactionController {
     }
 
     /**
-     * 更新表情计数
-     * @param entity 表情计数实体（需包含 postId）
+     * 更新文章反应记录
+     * @param entity 文章反应实体（需包含主键）
      * @return 是否更新成功
      */
     @PostMapping("/update")
     public Result<Boolean> update(@RequestBody PostReaction entity) {
-        if (entity.getPostId() == null) {
+        if (entity.getId() == null) {
             throw new GlobalException(ErrorCode.PARAMS_ERROR);
         }
         return ResultUtils.success(postReactionService.updateById(entity));
     }
 
     /**
-     * 删除表情计数（逻辑删除）
-     * @param postId 文章ID
+     * 删除文章反应记录（逻辑删除）
+     * @param id 主键 ID
      * @return 是否删除成功
      */
     @PostMapping("/delete")
-    public Result<Boolean> delete(@RequestBody Long postId) {
-        if (postId == null || postId <= 0) {
+    public Result<Boolean> delete(@RequestBody Long id) {
+        if (id == null || id <= 0) {
             throw new GlobalException(ErrorCode.PARAMS_ERROR);
         }
-        return ResultUtils.success(postReactionService.removeById(postId));
+        return ResultUtils.success(postReactionService.removeById(id));
     }
 }
