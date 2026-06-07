@@ -126,6 +126,43 @@ CREATE TABLE IF NOT EXISTS `post_category`
 
 
 -- ============================================================
+-- 4.1. post_asset — 文章正文资源（后台编辑器上传）
+-- ============================================================
+-- 设计理由：
+--   正文 Markdown 保存稳定资源地址 /rest/v1/assets/{id}，不写 OSS 短签名 URL。
+--   新建文章未保存前使用 draft_token + created_by 绑定草稿资源，保存后再绑定 post_id。
+--   status 默认 draft，公开访问接口只允许 active 且已绑定已发布文章的资源。
+CREATE TABLE IF NOT EXISTS `post_asset`
+(
+    id             BIGINT UNSIGNED  NOT NULL AUTO_INCREMENT COMMENT '主键',
+    post_id        BIGINT UNSIGNED  NULL     COMMENT '文章 ID，新建草稿阶段为空',
+    draft_token    VARCHAR(64)      NULL     COMMENT '前端草稿 token，用于新文章保存前绑定资源',
+    object_key     VARCHAR(512)     NOT NULL COMMENT 'OSS object key',
+    original_name  VARCHAR(255)     NULL     COMMENT '原始文件名',
+    mime_type      VARCHAR(100)     NOT NULL COMMENT 'MIME 类型',
+    file_size      BIGINT UNSIGNED  NOT NULL DEFAULT 0 COMMENT '文件大小，单位字节',
+    width          INT UNSIGNED     NULL     COMMENT '图片宽度',
+    height         INT UNSIGNED     NULL     COMMENT '图片高度',
+    alt            VARCHAR(255)     NULL     COMMENT '图片替代文本',
+    usage_type     VARCHAR(32)      NOT NULL DEFAULT 'body' COMMENT '用途：body 正文图片',
+    status         VARCHAR(32)      NOT NULL DEFAULT 'draft' COMMENT '状态：draft / active / unused / deleted',
+    created_by     BIGINT UNSIGNED  NULL     COMMENT '上传人用户 ID',
+    created_at     DATETIME         NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    updated_at     DATETIME         NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    deleted        TINYINT UNSIGNED NOT NULL DEFAULT 0 COMMENT '逻辑删除：0 = 未删除，1 = 已删除',
+    PRIMARY KEY (id),
+    KEY idx_post_asset_post (post_id),
+    KEY idx_post_asset_draft (draft_token),
+    KEY idx_post_asset_created_by (created_by),
+    KEY idx_post_asset_object_key (object_key),
+    KEY idx_post_asset_status (status)
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4
+  COLLATE = utf8mb4_unicode_ci
+  COMMENT = '文章正文资源';
+
+
+-- ============================================================
 -- 5. site_config — 站点配置（单行固定列，Phase 1）
 -- ============================================================
 -- 设计理由：

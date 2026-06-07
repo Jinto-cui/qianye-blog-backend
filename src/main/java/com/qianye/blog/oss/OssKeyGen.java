@@ -19,6 +19,11 @@ public class OssKeyGen {
         return String.format("post/%s.%s", UUID.randomUUID().toString(), ext(fileName));
     }
 
+    /** 文章正文图片：post/body/{uuid}.{ext} */
+    public static String postBodyImage(String fileName) {
+        return String.format("post/body/%s.%s", UUID.randomUUID().toString(), ext(fileName));
+    }
+
     /** 用户头像：avatar/user{userId}/{uuid}.{ext} */
     public static String avatar(Long userId, String fileName) {
         return String.format("avatar/user%d/%s.%s", userId, UUID.randomUUID().toString(), ext(fileName));
@@ -43,6 +48,6 @@ public class OssKeyGen {
     private static String ext(String fileName) {
         if (fileName == null) return "jpg";
         int i = fileName.lastIndexOf('.');
-        return i > 0 ? fileName.substring(i + 1) : "jpg";
+        return i > 0 ? fileName.substring(i + 1).toLowerCase() : "jpg";
     }
 }
