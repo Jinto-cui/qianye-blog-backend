@@ -13,7 +13,9 @@ import com.qianye.blog.web.model.request.CreateCommentRequest;
 import com.qianye.blog.web.service.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -23,8 +25,8 @@ import java.util.stream.Collectors;
  *
  * @author: Jinto Cui
  * @desc: v2.1 适配新表结构，文章交互接口统一使用 post.id，移除 ext_id 运行依赖
- * @date: 2026/05/22 23:58
- * @version: v2.1
+ * @date: 2026/06/09 18:10
+ * @version: v2.2
  */
 @Service
 @Slf4j
@@ -72,12 +74,19 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post>
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public Long incrViews(Long postId) {
         Post post = findPostById(postId);
-        post.setViews(post.getViews() + 1);
-        updateById(post);
-        log.info("文章浏览量递增, postId={}, views={}", postId, post.getViews());
-        return post.getViews();
+        boolean updated = lambdaUpdate()
+                .eq(Post::getId, post.getId())
+                .setSql("views = views + 1")
+                .update();
+        if (!updated) {
+            throw new GlobalException(ErrorCode.SYSTEM_ERROR, "浏览量更新失败");
+        }
+        Long nextViews = Optional.ofNullable(getById(post.getId()).getViews()).orElse(0L);
+        log.info("文章浏览量递增, postId={}, views={}", postId, nextViews);
+        return nextViews;
     }
 
     @Override
@@ -123,8 +132,13 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post>
             reaction.setPostId(post.getId());
             reaction.setUserId(loginId);
             reaction.setReactionType(reactionType);
-            postReactionService.save(reaction);
-            log.info("文章反应新增, postId={}, userId={}, reactionType={}", postId, loginId, reactionType);
+            try {
+                postReactionService.save(reaction);
+                log.info("文章反应新增, postId={}, userId={}, reactionType={}", postId, loginId, reactionType);
+            } catch (DuplicateKeyException e) {
+                // 快速重复点击或并发请求命中唯一索引时保持幂等，直接返回当前聚合计数。
+                log.info("文章反应重复提交已忽略, postId={}, userId={}, reactionType={}", postId, loginId, reactionType);
+            }
         }
         return getReactions(postId);
     }

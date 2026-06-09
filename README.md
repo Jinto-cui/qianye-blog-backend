@@ -92,6 +92,8 @@ java -jar target/qianye_blog_backend-0.0.1-SNAPSHOT.jar --spring.profiles.active
 - `GET /rest/v1/user/current`
 - `POST /rest/v1/admin/post-assets/upload`
 
+文章互动说明：浏览量写入 `post.views`；反应写入 `post_reaction` 用户级记录，`PATCH /posts/{id}/reactions` 需要 Sa-Token Header 登录态，重复点击同一种反应按唯一索引幂等处理。
+
 正文图片资源说明：
 
 - 后台编辑器粘贴图片调用 `POST /rest/v1/admin/post-assets/upload`，请求为 `multipart/form-data`，参数为 `file`、`draftToken`、可选 `postId`。
