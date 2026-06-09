@@ -12,8 +12,8 @@ import java.util.List;
 /**
  * @author: Jinto Cui
  * @desc: 文章服务接口 — 提供文章的查询、浏览量、表情反应与评论等核心业务能力
- * @date: 2026/06/04 23:58
- * @version: v1.1
+ * @date: 2026/06/10 00:42
+ * @version: v1.2
  */
 public interface PostService extends IService<Post> {
 
@@ -33,9 +33,10 @@ public interface PostService extends IService<Post> {
     PostDetailDto getPostBySlug(String slug);
 
     /**
-     * 递增文章浏览量（按 post.id），同步更新 post.views，返回最新值
+     * 递增文章浏览量（按 post.id），同步更新 post.views，返回最新值。
+     * 同一文章下同一登录用户或匿名 IP 在窗口期内超过阈值时不再递增，直接返回当前浏览量。
      */
-    Long incrViews(Long postId);
+    Long incrViews(Long postId, String visitorKey);
 
     /**
      * 批量查询浏览量（post.id 列表），顺序与请求一致

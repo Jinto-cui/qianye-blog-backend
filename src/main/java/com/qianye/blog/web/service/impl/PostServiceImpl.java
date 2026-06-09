@@ -18,20 +18,32 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /**
  * 文章服务实现
  *
  * @author: Jinto Cui
- * @desc: v2.1 适配新表结构，文章交互接口统一使用 post.id，移除 ext_id 运行依赖
- * @date: 2026/06/09 18:10
- * @version: v2.2
+ * @desc: v2.3 适配新表结构，文章交互接口统一使用 post.id，并限制同一访客短时间重复刷浏览量
+ * @date: 2026/06/10 00:42
+ * @version: v2.3
  */
 @Service
 @Slf4j
 public class PostServiceImpl extends ServiceImpl<PostMapper, Post>
         implements PostService {
+
+    /** 浏览量计数窗口：同一文章 + 同一访客 10 分钟最多计 1 次。 */
+    private static final long VIEW_WINDOW_MILLIS = TimeUnit.MINUTES.toMillis(10);
+
+    /** 单窗口最大可计数次数。 */
+    private static final int VIEW_WINDOW_MAX_COUNT = 1;
+
+    /** 内存级浏览量窗口，后续可替换为 Redis 计数器。 */
+    private static final ConcurrentMap<String, ViewWindow> VIEW_WINDOWS = new ConcurrentHashMap<>();
 
     @Autowired
     private PostReactionService postReactionService;
@@ -75,8 +87,13 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post>
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public Long incrViews(Long postId) {
+    public Long incrViews(Long postId, String visitorKey) {
         Post post = findPostById(postId);
+        if (!allowViewIncrement(post.getId(), visitorKey)) {
+            Long currentViews = Optional.ofNullable(post.getViews()).orElse(0L);
+            log.info("文章浏览量窗口限流, postId={}, visitorKey={}, views={}", postId, maskVisitorKey(visitorKey), currentViews);
+            return currentViews;
+        }
         boolean updated = lambdaUpdate()
                 .eq(Post::getId, post.getId())
                 .setSql("views = views + 1")
@@ -136,9 +153,12 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post>
                 postReactionService.save(reaction);
                 log.info("文章反应新增, postId={}, userId={}, reactionType={}", postId, loginId, reactionType);
             } catch (DuplicateKeyException e) {
-                // 快速重复点击或并发请求命中唯一索引时保持幂等，直接返回当前聚合计数。
-                log.info("文章反应重复提交已忽略, postId={}, userId={}, reactionType={}", postId, loginId, reactionType);
+                log.info("文章反应重复提交, postId={}, userId={}, reactionType={}", postId, loginId, reactionType);
+                throw new GlobalException(ErrorCode.PARAMS_ERROR, "已经点过这个表情");
             }
+        } else {
+            log.info("文章反应重复点击, postId={}, userId={}, reactionType={}", postId, loginId, reactionType);
+            throw new GlobalException(ErrorCode.PARAMS_ERROR, "已经点过这个表情");
         }
         return getReactions(postId);
     }
@@ -196,6 +216,75 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post>
                 return "thumbs_up";
             default:
                 throw new GlobalException(ErrorCode.PARAMS_ERROR, "index 非法");
+        }
+    }
+
+    /**
+     * 判断当前访客是否允许为文章增加浏览量。
+     */
+    private boolean allowViewIncrement(Long postId, String visitorKey) {
+        long now = System.currentTimeMillis();
+        String safeVisitorKey = visitorKey == null || visitorKey.trim().isEmpty() ? "unknown" : visitorKey.trim();
+        String key = postId + ":" + safeVisitorKey;
+        ViewWindow window = VIEW_WINDOWS.computeIfAbsent(key, ignored -> new ViewWindow(now));
+        synchronized (window) {
+            if (now - window.getWindowStartAt() >= VIEW_WINDOW_MILLIS) {
+                window.setWindowStartAt(now);
+                window.setCount(1);
+                cleanupExpiredViewWindows(now);
+                return true;
+            }
+            if (window.getCount() >= VIEW_WINDOW_MAX_COUNT) {
+                return false;
+            }
+            window.setCount(window.getCount() + 1);
+            return true;
+        }
+    }
+
+    /**
+     * 简单清理过期窗口，避免长期运行时内存无限增长。
+     */
+    private void cleanupExpiredViewWindows(long now) {
+        if (VIEW_WINDOWS.size() < 10000) {
+            return;
+        }
+        VIEW_WINDOWS.entrySet().removeIf(entry -> now - entry.getValue().getWindowStartAt() >= VIEW_WINDOW_MILLIS);
+    }
+
+    private String maskVisitorKey(String visitorKey) {
+        if (visitorKey == null || visitorKey.length() <= 12) {
+            return visitorKey;
+        }
+        return visitorKey.substring(0, 12) + "***";
+    }
+
+    /**
+     * 浏览量内存窗口记录。
+     */
+    private static class ViewWindow {
+        private long windowStartAt;
+        private int count;
+
+        ViewWindow(long windowStartAt) {
+            this.windowStartAt = windowStartAt;
+            this.count = 0;
+        }
+
+        long getWindowStartAt() {
+            return windowStartAt;
+        }
+
+        void setWindowStartAt(long windowStartAt) {
+            this.windowStartAt = windowStartAt;
+        }
+
+        int getCount() {
+            return count;
+        }
+
+        void setCount(int count) {
+            this.count = count;
         }
     }
 

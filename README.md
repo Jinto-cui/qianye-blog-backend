@@ -92,7 +92,7 @@ java -jar target/qianye_blog_backend-0.0.1-SNAPSHOT.jar --spring.profiles.active
 - `GET /rest/v1/user/current`
 - `POST /rest/v1/admin/post-assets/upload`
 
-文章互动说明：浏览量写入 `post.views`；反应写入 `post_reaction` 用户级记录，`PATCH /posts/{id}/reactions` 需要 Sa-Token Header 登录态，重复点击同一种反应按唯一索引幂等处理。
+文章互动说明：浏览量写入 `post.views`，同一文章下同一登录用户或匿名 IP 在 10 分钟窗口内最多计 1 次；反应写入 `post_reaction` 用户级记录，`PATCH /posts/{id}/reactions` 需要 Sa-Token Header 登录态，重复点击同一种反应返回 `40000 已经点过这个表情`。
 
 正文图片资源说明：
 

@@ -5,6 +5,7 @@ import cn.dev33.satoken.stp.StpUtil;
 import com.qianye.blog.common.Result;
 import com.qianye.blog.common.constant.ErrorCode;
 import com.qianye.blog.common.exception.GlobalException;
+import com.qianye.blog.utils.IPUtils;
 import com.qianye.blog.web.model.entity.Comment;
 import com.qianye.blog.web.model.dto.PostDetailDto;
 import com.qianye.blog.web.model.dto.PostDto;
@@ -16,6 +17,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletRequest;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -25,8 +27,8 @@ import java.util.stream.Collectors;
  *
  * @author: Jinto Cui
  * @desc: 提供文章列表、详情、浏览量、反应和评论接口，所有文章 ID 均使用 post.id
- * @date: 2026/06/04 23:40
- * @version: v2.1
+ * @date: 2026/06/10 00:32
+ * @version: v2.2
  */
 @RestController
 @RequestMapping("/rest/v1")
@@ -65,8 +67,8 @@ public class PostController {
      * 递增浏览量并返回最新值
      */
     @PostMapping("/posts/{id}/views/incr")
-    public Result<Long> incrViews(@PathVariable("id") Long postId) {
-        return ResultUtils.success(postService.incrViews(postId));
+    public Result<Long> incrViews(@PathVariable("id") Long postId, HttpServletRequest request) {
+        return ResultUtils.success(postService.incrViews(postId, buildViewVisitorKey(request)));
     }
 
     /**
@@ -129,5 +131,19 @@ public class PostController {
         } catch (NumberFormatException e) {
             throw new GlobalException(ErrorCode.PARAMS_ERROR, "文章ID非法");
         }
+    }
+
+    /**
+     * 构造浏览量限流访客标识：登录用户优先按用户限制，匿名访问按客户端 IP 限制。
+     */
+    private String buildViewVisitorKey(HttpServletRequest request) {
+        if (StpUtil.isLogin()) {
+            return "user:" + StpUtil.getLoginIdAsLong();
+        }
+        String ip = IPUtils.getIp(request);
+        if (StringUtils.isBlank(ip)) {
+            ip = request.getRemoteAddr();
+        }
+        return "ip:" + (StringUtils.isBlank(ip) ? "unknown" : ip);
     }
 }
