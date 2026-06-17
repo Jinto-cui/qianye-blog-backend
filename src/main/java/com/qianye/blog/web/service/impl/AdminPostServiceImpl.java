@@ -79,6 +79,7 @@ public class AdminPostServiceImpl implements AdminPostService {
     public Map<String, Object> updatePost(Long id, Map<String, Object> body, Long loginUserId) {
         Post post = findPost(id);
         fillPost(post, body, false);
+        post.setUpdatedAt(new Date());
         postService.updateById(post);
         updateCategories(id, body.get("categoryIds"));
         postAssetService.syncReferencedAssets(id, stringValue(body.get("draftToken")),
