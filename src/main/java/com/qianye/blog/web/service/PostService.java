@@ -1,7 +1,7 @@
 package com.qianye.blog.web.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.qianye.blog.web.model.entity.Comment;
+import com.qianye.blog.web.model.dto.CommentDto;
 import com.qianye.blog.web.model.entity.Post;
 import com.qianye.blog.web.model.dto.PostDetailDto;
 import com.qianye.blog.web.model.dto.PostDto;
@@ -56,10 +56,10 @@ public interface PostService extends IService<Post> {
     /**
      * 获取文章评论列表（按创建时间升序）
      */
-    List<Comment> listComments(Long postId);
+    List<CommentDto> listComments(Long postId);
 
     /**
-     * 新增评论（支持嵌套回复），返回新建评论实体
+     * 新增评论（支持嵌套回复），返回新建评论展示 DTO
      */
-    Comment addComment(Long postId, CreateCommentRequest req, long loginId);
+    CommentDto addComment(Long postId, CreateCommentRequest req, long loginId);
 }

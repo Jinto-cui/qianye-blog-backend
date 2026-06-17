@@ -6,7 +6,7 @@ import com.qianye.blog.common.Result;
 import com.qianye.blog.common.constant.ErrorCode;
 import com.qianye.blog.common.exception.GlobalException;
 import com.qianye.blog.utils.IPUtils;
-import com.qianye.blog.web.model.entity.Comment;
+import com.qianye.blog.web.model.dto.CommentDto;
 import com.qianye.blog.web.model.dto.PostDetailDto;
 import com.qianye.blog.web.model.dto.PostDto;
 import com.qianye.blog.web.model.request.CreateCommentRequest;
@@ -110,7 +110,7 @@ public class PostController {
      * 获取文章评论列表（升序）
      */
     @GetMapping("/posts/{id}/comments")
-    public Result<List<Comment>> listComments(@PathVariable("id") Long postId) {
+    public Result<List<CommentDto>> listComments(@PathVariable("id") Long postId) {
         return ResultUtils.success(postService.listComments(postId));
     }
 
@@ -119,8 +119,8 @@ public class PostController {
      */
     @SaCheckLogin
     @PostMapping("/posts/{id}/comments")
-    public Result<Comment> addComment(@PathVariable("id") Long postId,
-                                      @RequestBody CreateCommentRequest req) {
+    public Result<CommentDto> addComment(@PathVariable("id") Long postId,
+                                         @RequestBody CreateCommentRequest req) {
         long loginId = StpUtil.getLoginIdAsLong();
         return ResultUtils.success(postService.addComment(postId, req, loginId));
     }

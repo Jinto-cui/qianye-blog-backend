@@ -6,12 +6,16 @@ import com.qianye.blog.common.constant.ErrorCode;
 import com.qianye.blog.common.exception.GlobalException;
 import com.qianye.blog.oss.OssClient;
 import com.qianye.blog.web.mapper.PostMapper;
+import com.qianye.blog.web.model.dto.ContentSafetyResult;
+import com.qianye.blog.web.model.dto.CommentDto;
+import com.qianye.blog.web.model.dto.CommentUserDto;
 import com.qianye.blog.web.model.dto.PostDetailDto;
 import com.qianye.blog.web.model.dto.PostDto;
 import com.qianye.blog.web.model.entity.*;
 import com.qianye.blog.web.model.request.CreateCommentRequest;
 import com.qianye.blog.web.service.*;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
@@ -45,6 +49,9 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post>
     /** 内存级浏览量窗口，后续可替换为 Redis 计数器。 */
     private static final ConcurrentMap<String, ViewWindow> VIEW_WINDOWS = new ConcurrentHashMap<>();
 
+    /** 评论正文最大长度，对齐 template 评论输入上限。 */
+    private static final int COMMENT_MAX_LENGTH = 999;
+
     @Autowired
     private PostReactionService postReactionService;
     @Autowired
@@ -57,6 +64,8 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post>
     private UserService userService;
     @Autowired
     private OssClient ossClient;
+    @Autowired
+    private ContentSafetyService contentSafetyService;
 
     @Override
     public List<PostDto> listPosts(int limit, int offset) {
@@ -164,17 +173,34 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post>
     }
 
     @Override
-    public List<Comment> listComments(Long postId) {
+    public List<CommentDto> listComments(Long postId) {
         Post post = findPostById(postId);
         QueryWrapper<Comment> qw = new QueryWrapper<Comment>()
                 .eq("post_id", post.getId())
                 .orderByAsc("created_at");
-        return commentService.list(qw);
+        List<Comment> comments = commentService.list(qw);
+        Map<Long, User> userMap = loadCommentUsers(comments);
+        List<CommentDto> dtos = comments.stream()
+                .map(comment -> toCommentDto(comment, userMap.get(comment.getUserId())))
+                .collect(Collectors.toList());
+        log.info("文章评论列表返回, postId={}, count={}", postId, dtos.size());
+        return dtos;
     }
 
     @Override
-    public Comment addComment(Long postId, CreateCommentRequest req, long loginId) {
+    public CommentDto addComment(Long postId, CreateCommentRequest req, long loginId) {
         Post post = findPostById(postId);
+        if (req == null || StringUtils.isBlank(req.getBody())) {
+            throw new GlobalException(ErrorCode.PARAMS_ERROR, "评论内容不能为空");
+        }
+        String body = req.getBody().trim();
+        if (body.length() > COMMENT_MAX_LENGTH) {
+            throw new GlobalException(ErrorCode.PARAMS_ERROR, "评论最多 999 个字符");
+        }
+        ContentSafetyResult safetyResult = contentSafetyService.checkComment(body);
+        if (!safetyResult.isPassed()) {
+            throw new GlobalException(ErrorCode.PARAMS_ERROR, safetyResult.getMessage());
+        }
         if (req.getParentId() != null) {
             Comment parent = commentService.getById(req.getParentId());
             if (parent == null || !parent.getPostId().equals(post.getId())) {
@@ -184,11 +210,13 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post>
         Comment c = new Comment();
         c.setPostId(post.getId());
         c.setUserId(loginId);
-        c.setBody(req.getBody());
+        c.setBody(body);
         c.setParentId(req.getParentId());
+        c.setCreatedAt(new Date());
+        c.setUpdatedAt(c.getCreatedAt());
         commentService.save(c);
         log.info("文章评论新增, postId={}, userId={}, commentId={}", postId, loginId, c.getId());
-        return c;
+        return toCommentDto(c, userService.getById(loginId));
     }
 
     // ==================== private helpers ====================
@@ -312,6 +340,47 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post>
         dto.setCategories(getCategoryNames(post.getId()));
         dto.setReadingTime(post.getReadingTime());
         dto.setMood(post.getMood());
+        return dto;
+    }
+
+    private Map<Long, User> loadCommentUsers(List<Comment> comments) {
+        List<Long> userIds = comments.stream()
+                .map(Comment::getUserId)
+                .filter(Objects::nonNull)
+                .distinct()
+                .collect(Collectors.toList());
+        if (userIds.isEmpty()) {
+            return Collections.emptyMap();
+        }
+        return userService.list(new QueryWrapper<User>().in("id", userIds))
+                .stream()
+                .collect(Collectors.toMap(User::getId, user -> user, (left, right) -> left));
+    }
+
+    private CommentDto toCommentDto(Comment comment, User user) {
+        CommentDto dto = new CommentDto();
+        dto.setId(comment.getId());
+        dto.setPostId(comment.getPostId());
+        dto.setUserId(comment.getUserId());
+        dto.setBody(comment.getBody());
+        dto.setParentId(comment.getParentId());
+        dto.setCreatedAt(comment.getCreatedAt());
+        dto.setUserInfo(toCommentUserDto(comment.getUserId(), user));
+        return dto;
+    }
+
+    private CommentUserDto toCommentUserDto(Long userId, User user) {
+        CommentUserDto dto = new CommentUserDto();
+        dto.setId(userId);
+        if (user == null) {
+            dto.setNickname("已注销用户");
+            dto.setAvatarUrl(null);
+            return dto;
+        }
+        dto.setNickname(StringUtils.defaultIfBlank(user.getNickname(), user.getUserAccount()));
+        dto.setAvatarUrl(StringUtils.isNotBlank(user.getAvatarKey())
+                ? ossClient.getAccessUrl(user.getAvatarKey(), 3600)
+                : null);
         return dto;
     }
 
