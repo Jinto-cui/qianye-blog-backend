@@ -13,7 +13,7 @@
 ## 主要功能
 
 - 用户：注册、登录、登出、当前用户信息、管理员检索/删除用户
-- 文章：文章列表、Slug 列表、文章详情、浏览量递增、评论列表与新增
+- 文章：文章列表、Slug 列表、文章详情、后台草稿/发布状态、浏览量递增、评论列表与新增
 - 文章资源：后台正文图片上传到 OSS，正文保存稳定 `/rest/v1/assets/{id}` 地址
 - 站点内容：站点设置、留言板、分类、订阅用户、简报
 - 互动数据：文章浏览量、文章表情反馈（clap / heart / fire / thumbs_up）
@@ -94,13 +94,15 @@ java -jar target/qianye_blog_backend-0.0.1-SNAPSHOT.jar --spring.profiles.active
 
 文章互动说明：浏览量写入 `post.views`，同一文章下同一登录用户或匿名 IP 在 10 分钟窗口内最多计 1 次；反应写入 `post_reaction` 用户级记录，`PATCH /posts/{id}/reactions` 需要 Sa-Token Header 登录态，重复点击同一种反应返回 `40000 已经点过这个表情`。
 
+文章发布说明：`post.status` 是文章是否公开的唯一状态来源，当前支持 `draft` / `published` / `offline`；`published_at` 只记录首次发布时间。公开文章列表、详情、slug 列表、浏览量、反应、评论和正文资源接口均只允许访问 `status=published` 的文章。后台创建/更新文章支持 `publishAction=save_draft|publish|update|offline`，下架不会清空首次发布时间。
+
 评论接口说明：`GET /rest/v1/posts/{id}/comments` 公开返回按创建时间升序的评论 DTO，包含 `id/postId/userId/body/parentId/userInfo/createdAt`；`POST /rest/v1/posts/{id}/comments` 需要登录，正文会 trim，空内容或超过 999 字符返回业务错误，用户展示信息始终由后端按 `user_id` 关联生成。评论写库前会调用内容安全检测，当前使用 `resources/sensitive-words/*.txt` 9 类本地词表和链接/联系方式/重复内容规则，命中后返回通用业务错误，日志只记录类别和长度。
 
 正文图片资源说明：
 
 - 后台编辑器粘贴图片调用 `POST /rest/v1/admin/post-assets/upload`，请求为 `multipart/form-data`，参数为 `file`、`draftToken`、可选 `postId`。
 - 上传接口返回 `renderUrl = /rest/v1/assets/{id}` 和草稿预览用 `previewUrl = /rest/v1/assets/{id}?draftToken=...`，文章保存前会把正文规范化为不带查询参数的稳定地址。
-- `GET /rest/v1/assets/{id}` 是公开接口，只对 `active + 已绑定文章 + 文章已发布` 的资源返回 302 到 OSS 签名 URL；草稿资源仅允许携带匹配 `draftToken` 预览，未绑定且无 token、未发布文章资源返回 404。
+- `GET /rest/v1/assets/{id}` 是公开接口，只对 `active + 已绑定文章 + 文章 status=published` 的资源返回 302 到 OSS 签名 URL；后台编辑阶段可携带匹配 `draftToken` 预览资源，未携带 token 的未发布文章资源返回 404。
 - 创建/更新后台文章时会在事务内同步分类和正文资源引用，避免资源状态与文章内容不一致。
 
 ## 统一返回结构

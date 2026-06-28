@@ -52,6 +52,9 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post>
     /** 评论正文最大长度，对齐 template 评论输入上限。 */
     private static final int COMMENT_MAX_LENGTH = 999;
 
+    /** 公开可访问的文章状态。 */
+    private static final String STATUS_PUBLISHED = "published";
+
     @Autowired
     private PostReactionService postReactionService;
     @Autowired
@@ -71,7 +74,7 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post>
     public List<PostDto> listPosts(int limit, int offset) {
         int pageSize = Math.max(1, limit);
         QueryWrapper<Post> qw = new QueryWrapper<>();
-        qw.orderByDesc("published_at");
+        qw.eq("status", STATUS_PUBLISHED).orderByDesc("published_at");
         qw.last("limit " + pageSize + " offset " + Math.max(0, offset));
         List<Post> posts = list(qw);
         List<PostDto> dtos = posts.stream().map(this::toDto).collect(Collectors.toList());
@@ -81,13 +84,13 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post>
 
     @Override
     public List<String> listSlugs() {
-        List<Post> list = list(new QueryWrapper<Post>().select("slug"));
+        List<Post> list = list(new QueryWrapper<Post>().select("slug").eq("status", STATUS_PUBLISHED));
         return list.stream().map(Post::getSlug).collect(Collectors.toList());
     }
 
     @Override
     public PostDetailDto getPostBySlug(String slug) {
-        Post post = getOne(new QueryWrapper<Post>().eq("slug", slug));
+        Post post = getOne(new QueryWrapper<Post>().eq("slug", slug).eq("status", STATUS_PUBLISHED));
         if (post == null) {
             throw new GlobalException(ErrorCode.NULL_ERROR, "文章不存在");
         }
@@ -226,7 +229,7 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post>
      */
     private Post findPostById(Long postId) {
         Post post = getById(postId);
-        if (post == null) {
+        if (post == null || !STATUS_PUBLISHED.equals(post.getStatus())) {
             throw new GlobalException(ErrorCode.NULL_ERROR, "文章不存在");
         }
         return post;
@@ -427,7 +430,10 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post>
                 .collect(Collectors.toList());
         if (candidatePostIds.isEmpty()) return related;
         QueryWrapper<Post> qw = new QueryWrapper<>();
-        qw.in("id", candidatePostIds).orderByDesc("published_at").last("limit 4");
+        qw.in("id", candidatePostIds)
+                .eq("status", STATUS_PUBLISHED)
+                .orderByDesc("published_at")
+                .last("limit 4");
         return list(qw).stream().map(this::toDto).collect(Collectors.toList());
     }
 

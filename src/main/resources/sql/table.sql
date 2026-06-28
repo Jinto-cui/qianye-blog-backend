@@ -70,6 +70,7 @@ CREATE TABLE IF NOT EXISTS `category`
 --   body 替代 body_json：Markdown 替代 Portable Text JSON
 --   主图字段扁平化：四列独立字段替代嵌套 image 对象
 --   mood VARCHAR(16) 替代 ENUM：避免 ALTER TABLE 锁表
+--   status VARCHAR(20) 替代 ENUM：避免 ALTER TABLE 锁表，published_at 只记录首次发布时间
 --   author_id 关联 user：规范的外键关联
 CREATE TABLE IF NOT EXISTS `post`
 (
@@ -79,7 +80,8 @@ CREATE TABLE IF NOT EXISTS `post`
     description            TEXT             NULL     COMMENT '摘要（列表页展示）',
     body                   MEDIUMTEXT       NULL     COMMENT '正文（Markdown 格式）',
     mood                   VARCHAR(16)      NOT NULL DEFAULT 'neutral' COMMENT '情绪：neutral / happy / sad',
-    published_at           DATETIME         NULL     COMMENT '发布时间（NULL 表示草稿）',
+    status                 VARCHAR(20)      NOT NULL DEFAULT 'draft' COMMENT '文章状态：draft / published / offline',
+    published_at           DATETIME         NULL     COMMENT '首次发布时间（草稿可为空）',
     reading_time           INT UNSIGNED     NOT NULL DEFAULT 0 COMMENT '阅读时长（分钟）',
     main_image_key         VARCHAR(512)     NULL     COMMENT '主图 OSS object key',
     main_image_lqip        MEDIUMTEXT       NULL     COMMENT '主图 LQIP（base64 缩略图）',
@@ -93,6 +95,7 @@ CREATE TABLE IF NOT EXISTS `post`
     PRIMARY KEY (id),
     UNIQUE KEY uk_post_slug (slug),
     KEY idx_post_published_at (published_at),
+    KEY idx_post_status_published_at (status, published_at),
     KEY idx_post_author (author_id),
     KEY idx_post_mood (mood)
 ) ENGINE = InnoDB

@@ -10,9 +10,9 @@ import java.util.Date;
  * 文章
  *
  * @author: Jinto Cui
- * @desc: 博客文章实体，正文存 Markdown，主图字段扁平化，不再依赖 Sanity Portable Text
- * @date: 2026/05/19
- * @version: v2.0
+ * @desc: 博客文章实体，正文存 Markdown，status 决定公开状态，publishedAt 记录首次发布时间
+ * @date: 2026/06/28 12:02
+ * @version: v2.1
  * @table: post
  */
 @TableName(value = "post")
@@ -38,7 +38,10 @@ public class Post implements Serializable {
     /** 情绪：neutral / happy / sad */
     private String mood;
 
-    /** 发布时间（NULL 表示草稿） */
+    /** 文章状态：draft / published */
+    private String status;
+
+    /** 首次发布时间（草稿可为空） */
     private Date publishedAt;
 
     /** 阅读时长（分钟） */

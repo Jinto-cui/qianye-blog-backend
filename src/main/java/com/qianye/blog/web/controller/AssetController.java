@@ -28,6 +28,9 @@ import java.net.URI;
 @RequestMapping("/rest/v1/assets")
 public class AssetController {
 
+    /** 只有已发布文章的正文资源允许公开访问。 */
+    private static final String STATUS_PUBLISHED = "published";
+
     @Autowired
     private PostAssetService postAssetService;
     @Autowired
@@ -45,8 +48,7 @@ public class AssetController {
         if (asset == null) {
             return ResponseEntity.notFound().build();
         }
-        if ("draft".equals(asset.getStatus()) && asset.getPostId() == null
-                && draftToken != null && draftToken.equals(asset.getDraftToken())) {
+        if (draftToken != null && draftToken.equals(asset.getDraftToken())) {
             String url = ossClient.getAccessUrl(asset.getObjectKey(), 3600);
             return ResponseEntity.status(HttpStatus.FOUND).location(URI.create(url)).build();
         }
@@ -54,7 +56,7 @@ public class AssetController {
             return ResponseEntity.notFound().build();
         }
         Post post = postService.getById(asset.getPostId());
-        if (post == null || post.getPublishedAt() == null) {
+        if (post == null || !STATUS_PUBLISHED.equals(post.getStatus())) {
             return ResponseEntity.notFound().build();
         }
         String url = ossClient.getAccessUrl(asset.getObjectKey(), 3600);

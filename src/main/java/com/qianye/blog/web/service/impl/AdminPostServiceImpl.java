@@ -32,6 +32,27 @@ import java.util.stream.Collectors;
 @Slf4j
 public class AdminPostServiceImpl implements AdminPostService {
 
+    /** 草稿状态：仅后台可见。 */
+    private static final String STATUS_DRAFT = "draft";
+
+    /** 已发布状态：公开接口可见。 */
+    private static final String STATUS_PUBLISHED = "published";
+
+    /** 已下架状态：仅后台可见，保留首次发布时间。 */
+    private static final String STATUS_OFFLINE = "offline";
+
+    /** 保存草稿动作。 */
+    private static final String ACTION_SAVE_DRAFT = "save_draft";
+
+    /** 发布文章动作。 */
+    private static final String ACTION_PUBLISH = "publish";
+
+    /** 普通更新动作，不改变发布状态。 */
+    private static final String ACTION_UPDATE = "update";
+
+    /** 下架文章动作。 */
+    private static final String ACTION_OFFLINE = "offline";
+
     @Autowired
     private PostService postService;
     @Autowired
@@ -63,14 +84,15 @@ public class AdminPostServiceImpl implements AdminPostService {
     public Map<String, Object> createPost(Map<String, Object> body, Long loginUserId) {
         Post post = new Post();
         fillPost(post, body, true);
+        validateRequiredFields(post);
         post.setViews(0L);
         post.setAuthorId(loginUserId);
-        post.setPublishedAt(new Date());
+        applyPublishAction(post, stringValue(body.get("publishAction")), true);
         postService.save(post);
         updateCategories(post.getId(), body.get("categoryIds"));
         postAssetService.bindDraftAssets(post.getId(), stringValue(body.get("draftToken")),
                 post.getBody(), loginUserId);
-        log.info("后台文章创建成功, postId={}, userId={}", post.getId(), loginUserId);
+        log.info("后台文章创建成功, postId={}, userId={}, status={}", post.getId(), loginUserId, post.getStatus());
         return toAdminVo(post);
     }
 
@@ -79,12 +101,14 @@ public class AdminPostServiceImpl implements AdminPostService {
     public Map<String, Object> updatePost(Long id, Map<String, Object> body, Long loginUserId) {
         Post post = findPost(id);
         fillPost(post, body, false);
+        validateRequiredFields(post);
+        applyPublishAction(post, stringValue(body.get("publishAction")), false);
         post.setUpdatedAt(new Date());
         postService.updateById(post);
         updateCategories(id, body.get("categoryIds"));
         postAssetService.syncReferencedAssets(id, stringValue(body.get("draftToken")),
                 post.getBody(), loginUserId);
-        log.info("后台文章更新成功, postId={}, userId={}", id, loginUserId);
+        log.info("后台文章更新成功, postId={}, userId={}, status={}", id, loginUserId, post.getStatus());
         return toAdminVo(post);
     }
 
@@ -104,11 +128,12 @@ public class AdminPostServiceImpl implements AdminPostService {
     }
 
     private void fillPost(Post post, Map<String, Object> body, boolean create) {
-        if (create || body.containsKey("title")) post.setTitle((String) body.get("title"));
-        if (create || body.containsKey("slug")) post.setSlug((String) body.getOrDefault("slug", ""));
+        if (create || body.containsKey("title")) post.setTitle(trimString(body.get("title")));
+        if (create || body.containsKey("slug")) post.setSlug(trimString(body.getOrDefault("slug", "")));
         if (create || body.containsKey("description")) post.setDescription((String) body.get("description"));
         if (create || body.containsKey("body")) post.setBody((String) body.get("body"));
         if (create || body.containsKey("mood")) post.setMood((String) body.getOrDefault("mood", "neutral"));
+        if (create) post.setStatus(STATUS_DRAFT);
         if (create || body.containsKey("readingTime")) {
             post.setReadingTime(body.get("readingTime") != null
                     ? ((Number) body.get("readingTime")).intValue() : 0);
@@ -121,6 +146,43 @@ public class AdminPostServiceImpl implements AdminPostService {
         if (create || body.containsKey("mainImageDominantFg")) {
             post.setMainImageDominantFg((String) body.get("mainImageDominantFg"));
         }
+    }
+
+    private void validateRequiredFields(Post post) {
+        if (post.getTitle() == null || post.getTitle().trim().isEmpty()) {
+            throw new GlobalException(ErrorCode.PARAMS_ERROR, "文章标题不能为空");
+        }
+        if (post.getSlug() == null || post.getSlug().trim().isEmpty()) {
+            throw new GlobalException(ErrorCode.PARAMS_ERROR, "文章 slug 不能为空");
+        }
+    }
+
+    private void applyPublishAction(Post post, String action, boolean create) {
+        String normalizedAction = action == null || action.trim().isEmpty()
+                ? (create ? ACTION_PUBLISH : ACTION_UPDATE)
+                : action.trim();
+        if (ACTION_SAVE_DRAFT.equals(normalizedAction)) {
+            post.setStatus(STATUS_DRAFT);
+            return;
+        }
+        if (ACTION_PUBLISH.equals(normalizedAction)) {
+            post.setStatus(STATUS_PUBLISHED);
+            if (post.getPublishedAt() == null) {
+                post.setPublishedAt(new Date());
+            }
+            return;
+        }
+        if (ACTION_UPDATE.equals(normalizedAction)) {
+            if (post.getStatus() == null || post.getStatus().trim().isEmpty()) {
+                post.setStatus(post.getPublishedAt() == null ? STATUS_DRAFT : STATUS_PUBLISHED);
+            }
+            return;
+        }
+        if (ACTION_OFFLINE.equals(normalizedAction)) {
+            post.setStatus(STATUS_OFFLINE);
+            return;
+        }
+        throw new GlobalException(ErrorCode.PARAMS_ERROR, "publishAction 非法");
     }
 
     private void updateCategories(Long postId, Object categoryIdsObj) {
@@ -145,6 +207,7 @@ public class AdminPostServiceImpl implements AdminPostService {
         vo.put("description", post.getDescription());
         vo.put("body", post.getBody());
         vo.put("mood", post.getMood());
+        vo.put("status", post.getStatus());
         vo.put("readingTime", post.getReadingTime());
         vo.put("mainImageKey", post.getMainImageKey());
         vo.put("mainImageLqip", post.getMainImageLqip());
@@ -163,5 +226,9 @@ public class AdminPostServiceImpl implements AdminPostService {
 
     private String stringValue(Object value) {
         return value == null ? null : String.valueOf(value);
+    }
+
+    private String trimString(Object value) {
+        return value == null ? "" : String.valueOf(value).trim();
     }
 }
