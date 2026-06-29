@@ -90,6 +90,8 @@ java -jar target/qianye_blog_backend-0.0.1-SNAPSHOT.jar --spring.profiles.active
 - `POST /rest/v1/user/register`
 - `POST /rest/v1/user/login`
 - `GET /rest/v1/user/current`
+- `GET /rest/v1/admin/comments`
+- `DELETE /rest/v1/admin/comments/{id}`
 - `POST /rest/v1/admin/post-assets/upload`
 
 文章互动说明：浏览量写入 `post.views`，同一文章下同一登录用户或匿名 IP 在 10 分钟窗口内最多计 1 次；反应写入 `post_reaction` 用户级记录，`PATCH /posts/{id}/reactions` 需要 Sa-Token Header 登录态，重复点击同一种反应返回 `40000 已经点过这个表情`。
@@ -97,6 +99,8 @@ java -jar target/qianye_blog_backend-0.0.1-SNAPSHOT.jar --spring.profiles.active
 文章发布说明：`post.status` 是文章是否公开的唯一状态来源，当前支持 `draft` / `published` / `offline`；`published_at` 只记录首次发布时间。公开文章列表、详情、slug 列表、浏览量、反应、评论和正文资源接口均只允许访问 `status=published` 的文章。后台创建/更新文章支持 `publishAction=save_draft|publish|update|offline`，下架不会清空首次发布时间。
 
 评论接口说明：`GET /rest/v1/posts/{id}/comments` 公开返回按创建时间升序的评论 DTO，包含 `id/postId/userId/body/parentId/userInfo/createdAt`；`POST /rest/v1/posts/{id}/comments` 需要登录，正文会 trim，空内容或超过 999 字符返回业务错误，用户展示信息始终由后端按 `user_id` 关联生成。评论写库前会调用内容安全检测，当前使用 `resources/sensitive-words/*.txt` 9 类本地词表和链接/联系方式/重复内容规则，命中后返回通用业务错误，日志只记录类别和长度。
+
+后台评论管理说明：`GET /rest/v1/admin/comments?page=1&size=10&postId=&keyword=` 返回后台评论分页，包含文章标题/slug、评论用户展示信息和父评论摘要；`GET /rest/v1/admin/comments/count` 返回同筛选条件下的数量；`DELETE /rest/v1/admin/comments/{id}` 对评论执行逻辑删除。以上接口均受 `/rest/v1/admin/**` admin 角色拦截器保护。
 
 正文图片资源说明：
 
