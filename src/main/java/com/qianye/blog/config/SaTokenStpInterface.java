@@ -1,6 +1,7 @@
 package com.qianye.blog.config;
 
 import cn.dev33.satoken.stp.StpInterface;
+import com.qianye.blog.common.constant.UserConstant;
 import com.qianye.blog.web.model.entity.User;
 import com.qianye.blog.web.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,8 +11,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Sa-Token 权限/角色数据源
- * 根据登录用户 ID 返回对应的角色列表和权限列表
+ * Sa-Token 权限/角色数据源。
+ *
+ * @author: Jinto Cui
+ * @desc: 根据 user.role 映射 admin 与 super_admin，超级管理员继承管理员能力。
+ * @date: 2026/06/30 00:51
+ * @version: v1.1
  */
 @Component
 public class SaTokenStpInterface implements StpInterface {
@@ -30,8 +35,14 @@ public class SaTokenStpInterface implements StpInterface {
         try {
             long userId = Long.parseLong(loginId.toString());
             User user = userService.getById(userId);
-            if (user != null && user.getRole() != null && user.getRole() == 1) {
-                roles.add("admin");
+            if (user != null && user.getRole() != null) {
+                if (user.getRole() == UserConstant.ADMIN_ROLE
+                        || user.getRole() == UserConstant.SUPER_ADMIN_ROLE) {
+                    roles.add(UserConstant.ADMIN_ROLE_NAME);
+                }
+                if (user.getRole() == UserConstant.SUPER_ADMIN_ROLE) {
+                    roles.add(UserConstant.SUPER_ADMIN_ROLE_NAME);
+                }
             }
         } catch (Exception ignored) {
         }

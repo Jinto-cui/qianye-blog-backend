@@ -6,6 +6,7 @@ import cn.dev33.satoken.stp.StpUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.qianye.blog.common.Result;
 import com.qianye.blog.common.constant.ErrorCode;
+import com.qianye.blog.common.constant.UserConstant;
 import com.qianye.blog.common.exception.GlobalException;
 import com.qianye.blog.web.model.entity.User;
 import com.qianye.blog.web.model.dto.UserDto;
@@ -73,7 +74,7 @@ public class UserController {
     }
 
     @GetMapping("/search")
-    @SaCheckRole("admin")
+    @SaCheckRole(UserConstant.SUPER_ADMIN_ROLE_NAME)
     public Result<List<UserDto>> searchUsers(String keyword) {
         QueryWrapper<User> qw = new QueryWrapper<>();
         if (StringUtils.isNotBlank(keyword)) {
@@ -86,7 +87,7 @@ public class UserController {
     }
 
     @PostMapping("/delete")
-    @SaCheckRole("admin")
+    @SaCheckRole(UserConstant.SUPER_ADMIN_ROLE_NAME)
     public Result<Boolean> deleteUser(@RequestBody long id) {
         if (id <= 0) {
             throw new GlobalException(ErrorCode.PARAMS_ERROR);

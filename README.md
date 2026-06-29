@@ -92,7 +92,12 @@ java -jar target/qianye_blog_backend-0.0.1-SNAPSHOT.jar --spring.profiles.active
 - `GET /rest/v1/user/current`
 - `GET /rest/v1/admin/comments`
 - `DELETE /rest/v1/admin/comments/{id}`
+- `GET /rest/v1/admin/users`
+- `PUT /rest/v1/admin/users/{id}/role`
+- `PUT /rest/v1/admin/users/{id}/status`
 - `POST /rest/v1/admin/post-assets/upload`
+
+后台角色说明：`user.role` 当前支持 `0` 普通用户、`1` 管理员、`2` 超级管理员。`role=1/2` 拥有 Sa-Token `admin` 角色，可访问常规后台；`role=2` 额外拥有 `super_admin` 角色，才可访问后台用户管理。超级管理员账号通过 `src/main/resources/sql/super-admin-role-migration.sql` 这类数据库迁移显式授予，不在后台页面内扩权。
 
 文章互动说明：浏览量写入 `post.views`，同一文章下同一登录用户或匿名 IP 在 10 分钟窗口内最多计 1 次；反应写入 `post_reaction` 用户级记录，`PATCH /posts/{id}/reactions` 需要 Sa-Token Header 登录态，重复点击同一种反应返回 `40000 已经点过这个表情`。
 
@@ -101,6 +106,8 @@ java -jar target/qianye_blog_backend-0.0.1-SNAPSHOT.jar --spring.profiles.active
 评论接口说明：`GET /rest/v1/posts/{id}/comments` 公开返回按创建时间升序的评论 DTO，包含 `id/postId/userId/body/parentId/userInfo/createdAt`；`POST /rest/v1/posts/{id}/comments` 需要登录，正文会 trim，空内容或超过 999 字符返回业务错误，用户展示信息始终由后端按 `user_id` 关联生成。评论写库前会调用内容安全检测，当前使用 `resources/sensitive-words/*.txt` 9 类本地词表和链接/联系方式/重复内容规则，命中后返回通用业务错误，日志只记录类别和长度。
 
 后台评论管理说明：`GET /rest/v1/admin/comments?page=1&size=10&postId=&keyword=` 返回后台评论分页，包含文章标题/slug、评论用户展示信息和父评论摘要；`GET /rest/v1/admin/comments/count` 返回同筛选条件下的数量；`DELETE /rest/v1/admin/comments/{id}` 对评论执行逻辑删除。以上接口均受 `/rest/v1/admin/**` admin 角色拦截器保护。
+
+后台用户管理说明：`GET /rest/v1/admin/users?page=1&size=10&keyword=&role=&status=` 返回用户分页，支持按账号/昵称/邮箱关键词、角色和状态筛选；`PUT /rest/v1/admin/users/{id}/role` 仅允许把目标用户设为普通用户或管理员；`PUT /rest/v1/admin/users/{id}/status` 启用或停用账号；`DELETE /rest/v1/admin/users/{id}` 执行逻辑删除。以上接口均要求 `super_admin` 角色，且不能操作当前登录账号或任何超级管理员账号。
 
 正文图片资源说明：
 
