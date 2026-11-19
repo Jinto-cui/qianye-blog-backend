@@ -22,3 +22,8 @@ mybatis-plus:
       logic-delete-value: 1
       logic-not-delete-value: 0
       id-type: auto
+
+# 应用级配置
+app:
+  # 前端站点地址，用于生成订阅确认/退订链接
+  frontend-base-url: http://localhost:3000

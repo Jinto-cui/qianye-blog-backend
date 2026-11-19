@@ -13,6 +13,8 @@
 ## 主要功能
 
 - 用户：注册、登录、登出、当前用户信息、管理员检索/删除用户
+- 订阅：双确认订阅、确认/退订链接、有效订阅人数、后台订阅者管理
+- 简报：后台创建并发送、公开历史列表与详情（邮件发送当前为日志占位）
 - 文章：文章列表、Slug 列表、文章详情、后台草稿/发布状态、浏览量递增、评论列表与新增
 - 文章资源：后台正文图片上传到 OSS，正文保存稳定 `/rest/v1/assets/{id}` 地址
 - 站点内容：站点设置（含 SEO 标题/描述与关于页介绍）、项目展示、留言墙（分页读取 + 登录发表 + 60 秒频率限制）、分类、订阅用户、简报
@@ -89,8 +91,15 @@ java -jar target/qianye_blog_backend-0.0.1-SNAPSHOT.jar --spring.profiles.active
 - `GET /rest/v1/guestbook?limit=20&offset=0`
 - `POST /rest/v1/guestbook`
 - `GET /rest/v1/projects`
+- `POST /rest/v1/subscribe`
+- `GET /rest/v1/subscribe/confirm?token=`
+- `GET /rest/v1/subscribe/count`
+- `GET /rest/v1/newsletters`
+- `GET /rest/v1/newsletters/{id}`
 - `GET /rest/v1/admin/projects`
 - `POST /rest/v1/admin/projects`
+- `GET /rest/v1/admin/subscribers`
+- `POST /rest/v1/admin/newsletters`
 - `GET /rest/v1/site/config`
 - `POST /rest/v1/user/register`
 - `POST /rest/v1/user/login`
@@ -115,6 +124,10 @@ java -jar target/qianye_blog_backend-0.0.1-SNAPSHOT.jar --spring.profiles.active
 项目接口说明：`GET /rest/v1/projects` 公开返回按 `sort_order` 倒序的项目列表，图标 OSS key 转换为签名 URL；后台 `/rest/v1/admin/projects` 支持列表、新建、更新和逻辑删除，项目名称必填且不超过 128 字符，链接必须以 `http://` 或 `https://` 开头。
 
 站点配置说明：`GET /rest/v1/site/config` 除 hero/resume/socialLinks 外，还返回 `siteTitle`、`siteDescription` 和 `aboutContent`（Markdown 个人介绍），后台 `PUT /rest/v1/admin/site-config` 可更新这三个字段。存量库需执行 `src/main/resources/sql/site-config-about-seo-migration.sql` 增加列。
+
+订阅接口说明：`POST /rest/v1/subscribe` 接收邮箱并生成确认 token，`GET /rest/v1/subscribe/confirm?token=` 完成双确认，`GET /rest/v1/subscribe/unsubscribe?token=` 退订，`GET /rest/v1/subscribe/count` 返回已确认且未退订人数。确认链接由 `app.frontend-base-url` 拼装，邮件发送当前走 `LogMailServiceImpl` 日志占位，后续替换为真实邮件服务即可。
+
+简报接口说明：`GET /rest/v1/newsletters` 和 `GET /rest/v1/newsletters/{id}` 只返回已发送简报；后台 `GET /rest/v1/admin/newsletters` 查看历史，`POST /rest/v1/admin/newsletters` 创建并立即发送（记录 `sent_at`），`DELETE /rest/v1/admin/newsletters/{id}` 删除记录。后台订阅者接口为 `GET /rest/v1/admin/subscribers`、`GET /count`、`DELETE /{id}`，不返回确认 token。
 
 后台评论管理说明：`GET /rest/v1/admin/comments?page=1&size=10&postId=&keyword=` 返回后台评论分页，包含文章标题/slug、评论用户展示信息和父评论摘要；`GET /rest/v1/admin/comments/count` 返回同筛选条件下的数量；`DELETE /rest/v1/admin/comments/{id}` 对评论执行逻辑删除。以上接口均受 `/rest/v1/admin/**` admin 角色拦截器保护。
 
