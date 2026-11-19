@@ -89,8 +89,12 @@ NEXT_PUBLIC_API_BASE_URL=http://127.0.0.1:8080
 NEXT_PUBLIC_SITE_URL=http://localhost:3000
 ```
 
-- `NEXT_PUBLIC_API_BASE_URL`：浏览器和服务端访问后端的地址
+- `NEXT_PUBLIC_API_BASE_URL`：构建时注入的 API 地址；当前默认 `http://localhost:8080`
 - `NEXT_PUBLIC_SITE_URL`：站点对外地址，用于 metadataBase、sitemap、robots 和 RSS
+
+> 如果用 `http://127.0.0.1:3000` 打开页面，后端 CORS 已允许该来源（默认包含 localhost 和 127.0.0.1）。
+> 如果用局域网 IP 或其它设备访问，需要把该来源加入 `app.cors.allowed-origins`，同时把
+> `NEXT_PUBLIC_API_BASE_URL` 改为该设备可访问的后端地址后重新构建前端。
 
 构建与启动：
 
@@ -157,7 +161,7 @@ curl -s http://127.0.0.1:3000/feed.xml | head
 
 1. Nginx 反向代理 3000 和 8080，统一 HTTPS；只暴露 80/443。
 2. 前端 `NEXT_PUBLIC_SITE_URL` 使用正式域名，重新构建后 sitemap/robots/RSS 才会使用新域名。
-3. 后端 CORS 白名单当前写死 `http://localhost:3000`，上线前改为正式域名或通过配置注入。
+3. 后端 CORS 白名单通过 `app.cors.allowed-origins` 配置，默认 `http://localhost:3000,http://127.0.0.1:3000`；用局域网 IP 或正式域名访问前端时，需要把对应来源加入配置。
 4. 邮件服务当前为日志占位（`LogMailServiceImpl`），上线前接入 SMTP/Resend 并实现真实确认与退订链接投递。
 5. 限流为单机内存实现，多实例部署时替换为 Redis 计数器。
 6. 数据库与 OSS 密钥使用环境变量注入，禁止提交真实密钥；定期备份 MySQL。

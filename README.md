@@ -67,7 +67,7 @@ java -jar target/qianye_blog_backend-0.0.1-SNAPSHOT.jar --spring.profiles.active
 - 文件上传限制：
   - `max-file-size: 10MB`
   - `max-request-size: 12MB`
-- CORS 当前仅放行 `http://localhost:3000` 到 `/rest/v1/**`
+- CORS 放行来源由 `app.cors.allowed-origins` 配置，默认 `http://localhost:3000,http://127.0.0.1:3000`
 
 ## 接口前缀与分组
 

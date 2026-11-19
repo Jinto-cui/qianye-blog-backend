@@ -27,3 +27,6 @@ mybatis-plus:
 app:
   # 前端站点地址，用于生成订阅确认/退订链接
   frontend-base-url: http://localhost:3000
+  cors:
+    # 允许跨域的前端来源，逗号分隔；局域网访问时追加 http://<本机IP>:3000
+    allowed-origins: http://localhost:3000,http://127.0.0.1:3000
