@@ -106,17 +106,18 @@ npm run start -- -p 3000
 
 ## 6. 本地测试环境一键启停
 
-仓库根目录提供脚本（需要两个子仓库位于同一父目录）：
+后端仓库 `scripts/` 提供脚本（需要在 monorepo 根目录执行，两个子仓库位于同一父目录）：
 
 ```bash
+cd <monorepo-root>
 # 构建并启动后端 8080 + 前端 3000
-./scripts/start-test-env.sh
+./qianye-blog-backend/scripts/start-test-env.sh
 
 # 只启动，不重新构建
-./scripts/start-test-env.sh --no-build
+./qianye-blog-backend/scripts/start-test-env.sh --no-build
 
 # 停止
-./scripts/stop-test-env.sh
+./qianye-blog-backend/scripts/stop-test-env.sh
 ```
 
 脚本会在根目录 `.run/` 下写入 PID 和日志：
