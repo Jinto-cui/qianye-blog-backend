@@ -6,7 +6,7 @@ import com.qianye.blog.common.constant.ErrorCode;
 import com.qianye.blog.common.exception.GlobalException;
 import com.qianye.blog.oss.OssClient;
 import com.qianye.blog.web.model.dto.AdminCommentDto;
-import com.qianye.blog.web.model.dto.CommentUserDto;
+import com.qianye.blog.web.model.dto.UserDisplayDto;
 import com.qianye.blog.web.model.entity.Comment;
 import com.qianye.blog.web.model.entity.Post;
 import com.qianye.blog.web.model.entity.User;
@@ -179,8 +179,8 @@ public class AdminCommentServiceImpl implements AdminCommentService {
         return dto;
     }
 
-    private CommentUserDto toUserDto(Long userId, User user) {
-        CommentUserDto dto = new CommentUserDto();
+    private UserDisplayDto toUserDto(Long userId, User user) {
+        UserDisplayDto dto = new UserDisplayDto();
         dto.setId(userId);
         if (user == null) {
             dto.setNickname("已注销用户");

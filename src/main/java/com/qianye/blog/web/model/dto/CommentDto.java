@@ -35,7 +35,7 @@ public class CommentDto implements Serializable {
     private Long parentId;
 
     /** 用户展示信息 */
-    private CommentUserDto userInfo;
+    private UserDisplayDto userInfo;
 
     /** 创建时间 */
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")

@@ -8,7 +8,7 @@ import com.qianye.blog.oss.OssClient;
 import com.qianye.blog.web.mapper.PostMapper;
 import com.qianye.blog.web.model.dto.ContentSafetyResult;
 import com.qianye.blog.web.model.dto.CommentDto;
-import com.qianye.blog.web.model.dto.CommentUserDto;
+import com.qianye.blog.web.model.dto.UserDisplayDto;
 import com.qianye.blog.web.model.dto.PostDetailDto;
 import com.qianye.blog.web.model.dto.PostDto;
 import com.qianye.blog.web.model.entity.*;
@@ -368,12 +368,12 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post>
         dto.setBody(comment.getBody());
         dto.setParentId(comment.getParentId());
         dto.setCreatedAt(comment.getCreatedAt());
-        dto.setUserInfo(toCommentUserDto(comment.getUserId(), user));
+        dto.setUserInfo(toUserDisplayDto(comment.getUserId(), user));
         return dto;
     }
 
-    private CommentUserDto toCommentUserDto(Long userId, User user) {
-        CommentUserDto dto = new CommentUserDto();
+    private UserDisplayDto toUserDisplayDto(Long userId, User user) {
+        UserDisplayDto dto = new UserDisplayDto();
         dto.setId(userId);
         if (user == null) {
             dto.setNickname("已注销用户");

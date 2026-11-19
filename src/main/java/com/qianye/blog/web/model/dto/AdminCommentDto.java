@@ -35,7 +35,7 @@ public class AdminCommentDto implements Serializable {
     private Long userId;
 
     /** 评论用户展示信息 */
-    private CommentUserDto userInfo;
+    private UserDisplayDto userInfo;
 
     /** 评论正文 */
     private String body;

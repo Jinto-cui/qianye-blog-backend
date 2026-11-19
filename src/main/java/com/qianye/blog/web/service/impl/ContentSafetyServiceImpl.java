@@ -35,7 +35,7 @@ public class ContentSafetyServiceImpl implements ContentSafetyService {
 
     private static final String WORD_RESOURCE_PATTERN = "classpath*:sensitive-words/*.txt";
 
-    private static final String REJECT_MESSAGE = "评论内容包含不适合发布的内容";
+    private static final String REJECT_MESSAGE = "内容包含不适合发布的内容";
 
     private static final int MAX_LINK_COUNT = 2;
 
@@ -95,14 +95,14 @@ public class ContentSafetyServiceImpl implements ContentSafetyService {
 
     private ContentSafetyResult checkRules(String normalized) {
         if (countMatches(URL_PATTERN, normalized) > MAX_LINK_COUNT) {
-            return ContentSafetyResult.reject("ads", "评论包含过多链接，请减少外链后再发布");
+            return ContentSafetyResult.reject("ads", "内容包含过多链接，请减少外链后再发布");
         }
         if (countMatches(CONTACT_PATTERN, normalized) > MAX_CONTACT_COUNT) {
-            return ContentSafetyResult.reject("ads", "评论包含过多联系方式，请调整后再发布");
+            return ContentSafetyResult.reject("ads", "内容包含过多联系方式，请调整后再发布");
         }
         if (REPEAT_CHAR_PATTERN.matcher(normalized).find()
                 || REPEAT_PHRASE_PATTERN.matcher(normalized).find()) {
-            return ContentSafetyResult.reject("spam", "评论内容重复度过高，请调整后再发布");
+            return ContentSafetyResult.reject("spam", "内容重复度过高，请调整后再发布");
         }
         return ContentSafetyResult.pass();
     }

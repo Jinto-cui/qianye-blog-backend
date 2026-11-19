@@ -15,7 +15,7 @@
 - 用户：注册、登录、登出、当前用户信息、管理员检索/删除用户
 - 文章：文章列表、Slug 列表、文章详情、后台草稿/发布状态、浏览量递增、评论列表与新增
 - 文章资源：后台正文图片上传到 OSS，正文保存稳定 `/rest/v1/assets/{id}` 地址
-- 站点内容：站点设置、留言板、分类、订阅用户、简报
+- 站点内容：站点设置、留言墙（分页读取 + 登录发表 + 60 秒频率限制）、分类、订阅用户、简报
 - 互动数据：文章浏览量、文章表情反馈（clap / heart / fire / thumbs_up）
 - 通用能力：统一返回结构、全局异常处理、请求日志与请求 ID
 
@@ -86,6 +86,8 @@ java -jar target/qianye_blog_backend-0.0.1-SNAPSHOT.jar --spring.profiles.active
 - `PATCH /rest/v1/posts/{id}/reactions?index=0`
 - `GET /rest/v1/posts/{id}/comments`
 - `POST /rest/v1/posts/{id}/comments`
+- `GET /rest/v1/guestbook?limit=20&offset=0`
+- `POST /rest/v1/guestbook`
 - `GET /rest/v1/site/config`
 - `POST /rest/v1/user/register`
 - `POST /rest/v1/user/login`
@@ -104,6 +106,8 @@ java -jar target/qianye_blog_backend-0.0.1-SNAPSHOT.jar --spring.profiles.active
 文章发布说明：`post.status` 是文章是否公开的唯一状态来源，当前支持 `draft` / `published` / `offline`；`published_at` 只记录首次发布时间。公开文章列表、详情、slug 列表、浏览量、反应、评论和正文资源接口均只允许访问 `status=published` 的文章。后台创建/更新文章支持 `publishAction=save_draft|publish|update|offline`，下架不会清空首次发布时间。
 
 评论接口说明：`GET /rest/v1/posts/{id}/comments` 公开返回按创建时间升序的评论 DTO，包含 `id/postId/userId/body/parentId/userInfo/createdAt`；`POST /rest/v1/posts/{id}/comments` 需要登录，正文会 trim，空内容或超过 999 字符返回业务错误，用户展示信息始终由后端按 `user_id` 关联生成。评论写库前会调用内容安全检测，当前使用 `resources/sensitive-words/*.txt` 9 类本地词表和链接/联系方式/重复内容规则，命中后返回通用业务错误，日志只记录类别和长度。
+
+留言接口说明：`GET /rest/v1/guestbook?limit=20&offset=0` 公开返回按创建时间倒序的 `GuestbookDto` 分页（单页最多 50 条），用户展示信息由后端按 `user_id` 关联生成；`POST /rest/v1/guestbook` 需要登录，正文 trim 后为空或超过 600 字符返回业务错误，写库前复用 `ContentSafetyService`，同一用户 60 秒内重复留言会被拒绝。
 
 后台评论管理说明：`GET /rest/v1/admin/comments?page=1&size=10&postId=&keyword=` 返回后台评论分页，包含文章标题/slug、评论用户展示信息和父评论摘要；`GET /rest/v1/admin/comments/count` 返回同筛选条件下的数量；`DELETE /rest/v1/admin/comments/{id}` 对评论执行逻辑删除。以上接口均受 `/rest/v1/admin/**` admin 角色拦截器保护。
 
