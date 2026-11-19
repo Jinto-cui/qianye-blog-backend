@@ -36,6 +36,15 @@ public class SiteConfig implements Serializable {
     /** OSS 基础 URL，用于拼接完整图片地址（如 https://oss-cn-hangzhou.aliyuncs.com） */
     private String ossBaseUrl;
 
+    /** 站点标题（SEO / 关于页展示） */
+    private String siteTitle;
+
+    /** 站点描述（SEO） */
+    private String siteDescription;
+
+    /** 关于页个人介绍，Markdown 文本 */
+    private String aboutContent;
+
     /** 创建时间 */
     private Date createdAt;
 

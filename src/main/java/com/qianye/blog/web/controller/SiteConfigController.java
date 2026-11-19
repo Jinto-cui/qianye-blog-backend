@@ -71,6 +71,9 @@ public class SiteConfigController {
         data.put("resume", resume);
         data.put("socialLinks", socialLinks != null ? socialLinks : new ArrayList<>());
         data.put("ossBaseUrl", baseUrl != null ? baseUrl : "");
+        data.put("siteTitle", config.getSiteTitle());
+        data.put("siteDescription", config.getSiteDescription());
+        data.put("aboutContent", config.getAboutContent());
 
         return ResultUtils.success(data);
     }

@@ -15,7 +15,7 @@
 - 用户：注册、登录、登出、当前用户信息、管理员检索/删除用户
 - 文章：文章列表、Slug 列表、文章详情、后台草稿/发布状态、浏览量递增、评论列表与新增
 - 文章资源：后台正文图片上传到 OSS，正文保存稳定 `/rest/v1/assets/{id}` 地址
-- 站点内容：站点设置、留言墙（分页读取 + 登录发表 + 60 秒频率限制）、分类、订阅用户、简报
+- 站点内容：站点设置（含 SEO 标题/描述与关于页介绍）、项目展示、留言墙（分页读取 + 登录发表 + 60 秒频率限制）、分类、订阅用户、简报
 - 互动数据：文章浏览量、文章表情反馈（clap / heart / fire / thumbs_up）
 - 通用能力：统一返回结构、全局异常处理、请求日志与请求 ID
 
@@ -88,6 +88,9 @@ java -jar target/qianye_blog_backend-0.0.1-SNAPSHOT.jar --spring.profiles.active
 - `POST /rest/v1/posts/{id}/comments`
 - `GET /rest/v1/guestbook?limit=20&offset=0`
 - `POST /rest/v1/guestbook`
+- `GET /rest/v1/projects`
+- `GET /rest/v1/admin/projects`
+- `POST /rest/v1/admin/projects`
 - `GET /rest/v1/site/config`
 - `POST /rest/v1/user/register`
 - `POST /rest/v1/user/login`
@@ -108,6 +111,10 @@ java -jar target/qianye_blog_backend-0.0.1-SNAPSHOT.jar --spring.profiles.active
 评论接口说明：`GET /rest/v1/posts/{id}/comments` 公开返回按创建时间升序的评论 DTO，包含 `id/postId/userId/body/parentId/userInfo/createdAt`；`POST /rest/v1/posts/{id}/comments` 需要登录，正文会 trim，空内容或超过 999 字符返回业务错误，用户展示信息始终由后端按 `user_id` 关联生成。评论写库前会调用内容安全检测，当前使用 `resources/sensitive-words/*.txt` 9 类本地词表和链接/联系方式/重复内容规则，命中后返回通用业务错误，日志只记录类别和长度。
 
 留言接口说明：`GET /rest/v1/guestbook?limit=20&offset=0` 公开返回按创建时间倒序的 `GuestbookDto` 分页（单页最多 50 条），用户展示信息由后端按 `user_id` 关联生成；`POST /rest/v1/guestbook` 需要登录，正文 trim 后为空或超过 600 字符返回业务错误，写库前复用 `ContentSafetyService`，同一用户 60 秒内重复留言会被拒绝。
+
+项目接口说明：`GET /rest/v1/projects` 公开返回按 `sort_order` 倒序的项目列表，图标 OSS key 转换为签名 URL；后台 `/rest/v1/admin/projects` 支持列表、新建、更新和逻辑删除，项目名称必填且不超过 128 字符，链接必须以 `http://` 或 `https://` 开头。
+
+站点配置说明：`GET /rest/v1/site/config` 除 hero/resume/socialLinks 外，还返回 `siteTitle`、`siteDescription` 和 `aboutContent`（Markdown 个人介绍），后台 `PUT /rest/v1/admin/site-config` 可更新这三个字段。存量库需执行 `src/main/resources/sql/site-config-about-seo-migration.sql` 增加列。
 
 后台评论管理说明：`GET /rest/v1/admin/comments?page=1&size=10&postId=&keyword=` 返回后台评论分页，包含文章标题/slug、评论用户展示信息和父评论摘要；`GET /rest/v1/admin/comments/count` 返回同筛选条件下的数量；`DELETE /rest/v1/admin/comments/{id}` 对评论执行逻辑删除。以上接口均受 `/rest/v1/admin/**` admin 角色拦截器保护。
 

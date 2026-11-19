@@ -66,6 +66,9 @@ public class AdminSiteConfigController {
         data.put("resume", resume);
         data.put("socialLinks", parseJsonArray(config.getSocialLinks()));
         data.put("ossBaseUrl", config.getOssBaseUrl());
+        data.put("siteTitle", config.getSiteTitle());
+        data.put("siteDescription", config.getSiteDescription());
+        data.put("aboutContent", config.getAboutContent());
         return ResultUtils.success(data);
     }
 
@@ -84,6 +87,15 @@ public class AdminSiteConfigController {
         }
         if (body.containsKey("ossBaseUrl")) {
             config.setOssBaseUrl((String) body.get("ossBaseUrl"));
+        }
+        if (body.containsKey("siteTitle")) {
+            config.setSiteTitle((String) body.get("siteTitle"));
+        }
+        if (body.containsKey("siteDescription")) {
+            config.setSiteDescription((String) body.get("siteDescription"));
+        }
+        if (body.containsKey("aboutContent")) {
+            config.setAboutContent((String) body.get("aboutContent"));
         }
 
         siteConfigService.updateConfig(config);
