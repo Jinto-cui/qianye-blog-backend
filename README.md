@@ -100,6 +100,9 @@ java -jar target/qianye_blog_backend-0.0.1-SNAPSHOT.jar --spring.profiles.active
 - `POST /rest/v1/admin/projects`
 - `GET /rest/v1/admin/subscribers`
 - `POST /rest/v1/admin/newsletters`
+- `GET /rest/v1/admin/categories`
+- `POST /rest/v1/admin/categories`
+- `PUT /rest/v1/admin/categories/{id}`
 - `GET /rest/v1/site/config`
 - `POST /rest/v1/user/register`
 - `POST /rest/v1/user/login`
@@ -124,6 +127,8 @@ java -jar target/qianye_blog_backend-0.0.1-SNAPSHOT.jar --spring.profiles.active
 项目接口说明：`GET /rest/v1/projects` 公开返回按 `sort_order` 倒序的项目列表，图标 OSS key 转换为签名 URL；后台 `/rest/v1/admin/projects` 支持列表、新建、更新和逻辑删除，项目名称必填且不超过 128 字符，链接必须以 `http://` 或 `https://` 开头。
 
 站点配置说明：`GET /rest/v1/site/config` 除 hero/resume/socialLinks 外，还返回 `siteTitle`、`siteDescription` 和 `aboutContent`（Markdown 个人介绍），后台 `PUT /rest/v1/admin/site-config` 可更新这三个字段。存量库需执行 `src/main/resources/sql/site-config-about-seo-migration.sql` 增加列。
+
+后台分类说明：`GET /rest/v1/admin/categories` 按排序权重返回分类；`POST` 新建、`PUT /{id}` 更新、`DELETE /{id}` 删除。分类名称和 slug 唯一，slug 留空时自动生成；分类下仍有文章时删除会返回业务错误。仪表盘统计额外返回 `projectCount`，`subscriberCount` 只统计已确认且未退订的订阅者。
 
 订阅接口说明：`POST /rest/v1/subscribe` 接收邮箱并生成确认 token，`GET /rest/v1/subscribe/confirm?token=` 完成双确认，`GET /rest/v1/subscribe/unsubscribe?token=` 退订，`GET /rest/v1/subscribe/count` 返回已确认且未退订人数。确认链接由 `app.frontend-base-url` 拼装，邮件发送当前走 `LogMailServiceImpl` 日志占位，后续替换为真实邮件服务即可。
 

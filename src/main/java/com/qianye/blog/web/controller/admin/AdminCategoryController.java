@@ -6,7 +6,15 @@ import com.qianye.blog.web.model.entity.Category;
 import com.qianye.blog.web.service.CategoryService;
 import com.qianye.blog.utils.ResultUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -32,7 +40,27 @@ public class AdminCategoryController {
     /** 全部分类列表 */
     @GetMapping("/categories")
     public Result<List<Category>> listCategories() {
-        return ResultUtils.success(categoryService.list());
+        return ResultUtils.success(categoryService.listCategories());
+    }
+
+    /** 新增分类 */
+    @PostMapping("/categories")
+    public Result<Category> createCategory(@RequestBody Map<String, Object> body) {
+        return ResultUtils.success(categoryService.createCategory(body));
+    }
+
+    /** 更新分类 */
+    @PutMapping("/categories/{id}")
+    public Result<Category> updateCategory(@PathVariable Long id,
+                                           @RequestBody Map<String, Object> body) {
+        return ResultUtils.success(categoryService.updateCategory(id, body));
+    }
+
+    /** 删除分类 */
+    @DeleteMapping("/categories/{id}")
+    public Result<Void> deleteCategory(@PathVariable Long id) {
+        categoryService.deleteCategory(id);
+        return ResultUtils.success(null);
     }
 
     /** 根据 OSS key 返回签名预览 URL */

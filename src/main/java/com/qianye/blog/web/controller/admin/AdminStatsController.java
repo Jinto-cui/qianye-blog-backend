@@ -2,7 +2,6 @@ package com.qianye.blog.web.controller.admin;
 
 import com.qianye.blog.common.Result;
 import com.qianye.blog.utils.ResultUtils;
-import com.qianye.blog.web.mapper.SubscriberMapper;
 import com.qianye.blog.web.service.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -33,7 +32,9 @@ public class AdminStatsController {
     @Autowired
     private CategoryService categoryService;
     @Autowired
-    private SubscriberMapper subscriberMapper;
+    private SubscriberService subscriberService;
+    @Autowired
+    private ProjectService projectService;
 
     @GetMapping("/stats")
     public Result<Map<String, Object>> stats() {
@@ -42,7 +43,8 @@ public class AdminStatsController {
         data.put("commentCount", commentService.count());
         data.put("guestbookCount", guestbookService.count());
         data.put("categoryCount", categoryService.count());
-        data.put("subscriberCount", subscriberMapper.selectCount(null));
+        data.put("subscriberCount", subscriberService.countActive());
+        data.put("projectCount", projectService.count());
         return ResultUtils.success(data);
     }
 }
